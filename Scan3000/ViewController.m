@@ -5,6 +5,8 @@
 //  Created by Pius Ott on 9/1/2026.
 //
 
+#include <termios.h>
+
 #import "ViewController.h"
 #import "SerialBuffer.h"
 #import "Utilities.h"
@@ -71,7 +73,7 @@ static NSInteger gCapturePause = 2;     // How long to pause (in seconds) after 
 
 // Function to open USB serial port
 int openSerialPort(NSString *devicePath)
-{/*
+{
     int fd = open([devicePath UTF8String], O_RDWR | O_NOCTTY | O_NONBLOCK);
     if (fd == -1)
     {
@@ -91,26 +93,24 @@ int openSerialPort(NSString *devicePath)
 
     tcsetattr(fd, TCSANOW, &options);
     return fd;
-  */ return 0;
 }
 
 // ------------------------------------------------------------------------------------------------
 
 /// Display the current settings. This is just a cheapo way to avoid implementing a proper settings feature. All settings for the time being
 /// need to be manually changed through editing the settings file.
-void showSettings(void)
+- (void)showSettings
 {
-    /*
-    printw("\n=== Settings ===\n");
+    [self appendOutput:@"\n=== Settings ===\n"];
+    [self appendOutput:@"\nNote that for the time being, settings can only be changed through the config file.\n"];
+    [self appendOutput:@"\n\tConfiguration File     : %s"];
 
-    printw("\nNote that for the time being, settings can only be changed through the config file.\n");
-    printw("\n\tConfiguration File     : %s", [@SETTINGS_FILE UTF8String]);
-    printw("\n\tCells To Read          : %i", gCellsToRead);
-    printw("\n\tCapture Pause          : %i", gCapturePause);
-    printw("\n\tUSB Port               : %s", [gUsbPort UTF8String]);
-    printw("\n\tLog File               : %s", [gLogName UTF8String]);
-    printw("\n\tCaptured Image Location: %s\n\n", [gImageLocation UTF8String]);
-*/
+    [self appendOutput:[NSString stringWithFormat:@"\n\tConfiguration File     : %s", [@SETTINGS_FILE UTF8String]]];
+    [self appendOutput:[NSString stringWithFormat:@"\n\tCells To Read          : %li", gCellsToRead]];
+    [self appendOutput:[NSString stringWithFormat:@"\n\tCapture Pause          : %li", gCapturePause]];
+    [self appendOutput:[NSString stringWithFormat:@"\n\tUSB Port               : %s", [gUsbPort UTF8String]]];
+    [self appendOutput:[NSString stringWithFormat:@"\n\tLog File               : %s", [gLogName UTF8String]]];
+    [self appendOutput:[NSString stringWithFormat:@"\n\tCaptured Image Location: %s\n\n", [gImageLocation UTF8String]]];
     // TODO: maybe add an option to re-load settings file?
 }
 
@@ -123,7 +123,7 @@ void showSettings(void)
 
 - (IBAction)showSettingsClicked:(id)sender
 {
-    showSettings();
+    [self showSettings];
     [self appendOutput:@"Settings displayed\n"];
 }
 
