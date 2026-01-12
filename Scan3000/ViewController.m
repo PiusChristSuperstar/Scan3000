@@ -39,8 +39,6 @@ static NSInteger gCapturePause = 2;     // How long to pause (in seconds) after 
 {
     [super viewDidLoad];
 
-    [self appendOutput:@"Text view connected successfully\n"];
-    
     [self readSettings];
 
     self.receiveBuffer = [[SerialBuffer alloc] init];
@@ -53,7 +51,6 @@ static NSInteger gCapturePause = 2;     // How long to pause (in seconds) after 
         return;
     }
 
-    [self appendOutput:@"USB Reader App Running...\n"];
     [self appendOutput:@"Monitoring USB input...\n\n"];
 
     [self startUSBReaderThread];
@@ -61,7 +58,8 @@ static NSInteger gCapturePause = 2;     // How long to pause (in seconds) after 
 
 // ------------------------------------------------------------------------------------------------
 
-- (void)setRepresentedObject:(id)representedObject {
+- (void)setRepresentedObject:(id)representedObject
+{
     [super setRepresentedObject:representedObject];
 
     // Update the view, if already loaded.
@@ -106,6 +104,22 @@ int openSerialPort(NSString *devicePath)
 
 // ------------------------------------------------------------------------------------------------
 
+- (void)sendCommand:(char *)cmd
+{
+    ssize_t numBytes = write(self.usb, cmd, strlen(cmd));
+    if (numBytes == -1)
+    {
+        NSString *err = [NSString stringWithFormat:@"USB write error: %s\n", strerror(errno)];
+        [self appendOutput:err];
+    }
+    else
+    {
+        [self appendOutput:[NSString stringWithFormat:@"Sent: %s\n", cmd]];
+    }
+}
+
+// ------------------------------------------------------------------------------------------------
+
 - (IBAction)showSettingsClicked:(id)sender
 {
     [self appendOutput:@"\n=== Settings ===\n"];
@@ -123,22 +137,6 @@ int openSerialPort(NSString *devicePath)
     [self appendOutput:[NSString stringWithFormat:@"\n\tLog File\t\t\t\t: %s", [gLogName UTF8String]]];
     [self appendOutput:[NSString stringWithFormat:@"\n\tCaptured Image Location\t: %s\n\n", [gImageLocation UTF8String]]];
     // TODO: maybe add an option to re-load settings file?
-}
-
-// ------------------------------------------------------------------------------------------------
-
-- (IBAction)nextCellClicked:(id)sender
-{
-    ssize_t numBytes = write(self.usb, CMD_NEXTCELL, strlen(CMD_NEXTCELL));
-    if (numBytes == -1)
-    {
-        NSString *err = [NSString stringWithFormat:@"USB write error: %s\n", strerror(errno)];
-        [self appendOutput:err];
-    }
-    else
-    {
-        [self appendOutput:@"Sent CMD_NEXTCELL\n"];
-    }
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -164,6 +162,34 @@ int openSerialPort(NSString *devicePath)
 {
     close(self.usb);
     [NSApp terminate:nil];
+}
+
+// ------------------------------------------------------------------------------------------------
+
+- (IBAction)nextCellClicked:(id)sender
+{
+    [self sendCommand:CMD_NEXTCELL];
+}
+
+// ------------------------------------------------------------------------------------------------
+
+- (IBAction)pingClicked:(id)sender
+{
+    [self sendCommand:CMD_PING];
+}
+
+// ------------------------------------------------------------------------------------------------
+
+- (IBAction)rewindClicked:(id)sender
+{
+    [self sendCommand:CMD_REWIND];
+}
+
+// ------------------------------------------------------------------------------------------------
+
+- (IBAction)optoClicked:(id)sender
+{
+    [self sendCommand:CMD_TESTOPTO];
 }
 
 // ------------------------------------------------------------------------------------------------

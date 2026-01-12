@@ -20,8 +20,9 @@
 - (IBAction)showSettingsClicked:(id)sender;
 - (IBAction)nextCellClicked:(id)sender;
 - (IBAction)showSerialBufferClicked:(id)sender;
-- (IBAction)exitClicked:(id)sender;
-
+- (IBAction)pingClicked:(id)sender;
+- (IBAction)optoClicked:(id)sender;
+- (IBAction)rewindClicked:(id)sender;
 
 @end
 
