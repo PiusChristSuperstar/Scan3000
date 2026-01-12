@@ -13,7 +13,7 @@
 #import "ArduinoResponse.h"
 
 // The file that holds the instructions and configuration for our app
-#define SETTINGS_FILE "/Users/Pius/dev/XCode/ModemCommTest/settings.xcconfig"
+#define SETTINGS_FILE "settings.xcconfig"
 
 // TODO: these should move to a class or the header.
 static NSString *gLastError = @"";      // most recent error message
@@ -41,7 +41,7 @@ static NSInteger gCapturePause = 2;     // How long to pause (in seconds) after 
 
     [self appendOutput:@"Text view connected successfully\n"];
     
-    readSettings();
+    [self readSettings];
 
     self.receiveBuffer = [[SerialBuffer alloc] init];
     self.rawBuffer = [NSMutableData data];
@@ -97,23 +97,6 @@ int openSerialPort(NSString *devicePath)
 
 // ------------------------------------------------------------------------------------------------
 
-/// Display the current settings. This is just a cheapo way to avoid implementing a proper settings feature. All settings for the time being
-/// need to be manually changed through editing the settings file.
-- (void)showSettings
-{
-    [self appendOutput:@"\n=== Settings ===\n"];
-    [self appendOutput:@"\nNote that for the time being, settings can only be changed through the config file.\n"];
-    [self appendOutput:@"\n\tConfiguration File     : %s"];
-
-    [self appendOutput:[NSString stringWithFormat:@"\n\tConfiguration File     : %s", [@SETTINGS_FILE UTF8String]]];
-    [self appendOutput:[NSString stringWithFormat:@"\n\tCells To Read          : %li", gCellsToRead]];
-    [self appendOutput:[NSString stringWithFormat:@"\n\tCapture Pause          : %li", gCapturePause]];
-    [self appendOutput:[NSString stringWithFormat:@"\n\tUSB Port               : %s", [gUsbPort UTF8String]]];
-    [self appendOutput:[NSString stringWithFormat:@"\n\tLog File               : %s", [gLogName UTF8String]]];
-    [self appendOutput:[NSString stringWithFormat:@"\n\tCaptured Image Location: %s\n\n", [gImageLocation UTF8String]]];
-    // TODO: maybe add an option to re-load settings file?
-}
-
 - (void)appendOutput:(NSString *)text
 {
     NSTextStorage *storage = self.outputTextView.textStorage;
@@ -121,11 +104,28 @@ int openSerialPort(NSString *devicePath)
     [self.outputTextView scrollRangeToVisible:NSMakeRange(storage.length, 0)];
 }
 
+// ------------------------------------------------------------------------------------------------
+
 - (IBAction)showSettingsClicked:(id)sender
 {
-    [self showSettings];
-    [self appendOutput:@"Settings displayed\n"];
+    [self appendOutput:@"\n=== Settings ===\n"];
+    [self appendOutput:@"\nNote that for the time being, settings can only be changed through the config file.\n"];
+    
+    NSString *settingsPath = [NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,
+                                             NSUserDomainMask,
+                                             YES).firstObject stringByAppendingPathComponent:@SETTINGS_FILE];
+
+    
+    [self appendOutput:[NSString stringWithFormat:@"\n\tConfiguration File\t\t: %s", [settingsPath UTF8String]]];
+    [self appendOutput:[NSString stringWithFormat:@"\n\tCells To Read\t\t\t: %li", gCellsToRead]];
+    [self appendOutput:[NSString stringWithFormat:@"\n\tCapture Pause\t\t\t: %li", gCapturePause]];
+    [self appendOutput:[NSString stringWithFormat:@"\n\tUSB Port\t\t\t\t: %s", [gUsbPort UTF8String]]];
+    [self appendOutput:[NSString stringWithFormat:@"\n\tLog File\t\t\t\t: %s", [gLogName UTF8String]]];
+    [self appendOutput:[NSString stringWithFormat:@"\n\tCaptured Image Location\t: %s\n\n", [gImageLocation UTF8String]]];
+    // TODO: maybe add an option to re-load settings file?
 }
+
+// ------------------------------------------------------------------------------------------------
 
 - (IBAction)nextCellClicked:(id)sender
 {
@@ -140,6 +140,8 @@ int openSerialPort(NSString *devicePath)
         [self appendOutput:@"Sent CMD_NEXTCELL\n"];
     }
 }
+
+// ------------------------------------------------------------------------------------------------
 
 - (IBAction)showSerialBufferClicked:(id)sender
 {
@@ -156,12 +158,15 @@ int openSerialPort(NSString *devicePath)
     }
 }
 
+// ------------------------------------------------------------------------------------------------
+
 - (IBAction)exitClicked:(id)sender
 {
     close(self.usb);
     [NSApp terminate:nil];
 }
 
+// ------------------------------------------------------------------------------------------------
 
 - (void)startUSBReaderThread
 {
@@ -216,14 +221,21 @@ int openSerialPort(NSString *devicePath)
 // ------------------------------------------------------------------------------------------------
 
 /// Load the configuration settings. If no file is defined, or the file could not be opened, we just use default values.
-static void readSettings(void)
+- (void)readSettings
 {
-    NSError *error = nil;
-    NSString *fileContents = [NSString stringWithContentsOfFile:@SETTINGS_FILE encoding:NSUTF8StringEncoding error:&error];
 
+    NSError *error = nil;
+
+    NSString *settingsPath = [NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,
+                                             NSUserDomainMask,
+                                             YES).firstObject stringByAppendingPathComponent:@SETTINGS_FILE];
+    
+    NSString *fileContents = [NSString stringWithContentsOfFile:settingsPath encoding:NSUTF8StringEncoding error:&error];
+    
     if (error)
     {
-        NSLog(@"Error reading config file: [%@] - using default configurations instead", error.localizedDescription);
+        [self appendOutput:[NSString stringWithFormat:
+            @"Error reading config file: [%@] - using default configurations instead\n", error.localizedDescription]];
         return;
     }
 
