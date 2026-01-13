@@ -16,6 +16,8 @@
 @property (nonatomic, strong) NSMutableData *rawBuffer;
 
 @property (weak) IBOutlet NSTextView *outputTextView;
+@property (weak) IBOutlet NSImageView *commsLED;
+@property (weak) IBOutlet NSImageView *cmdLED;
 
 - (IBAction)showSettingsClicked:(id)sender;
 - (IBAction)nextCellClicked:(id)sender;

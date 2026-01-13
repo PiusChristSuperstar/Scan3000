@@ -39,6 +39,9 @@ static NSInteger gCapturePause = 2;     // How long to pause (in seconds) after 
 {
     [super viewDidLoad];
 
+    [self setLEDState:LEDStateOff imgName:_commsLED];
+    [self setLEDState:LEDStateRed imgName:_cmdLED];
+
     [self readSettings];
 
     self.receiveBuffer = [[SerialBuffer alloc] init];
@@ -50,10 +53,11 @@ static NSInteger gCapturePause = 2;     // How long to pause (in seconds) after 
         [self appendOutput:@"Failed to open USB port\n"];
         return;
     }
-
+    [self setLEDState:LEDStateGreen imgName:_commsLED];
     [self appendOutput:@"Monitoring USB input...\n\n"];
 
     [self startUSBReaderThread];
+    [self startResponseReaderThread];            // start the thread that interprets responses we've received from the projector
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -106,6 +110,8 @@ int openSerialPort(NSString *devicePath)
 
 - (void)sendCommand:(char *)cmd
 {
+    [self setLEDState:LEDStateRed imgName:_cmdLED];
+
     ssize_t numBytes = write(self.usb, cmd, strlen(cmd));
     if (numBytes == -1)
     {
@@ -194,6 +200,60 @@ int openSerialPort(NSString *devicePath)
 
 // ------------------------------------------------------------------------------------------------
 
+- (void)startResponseReaderThread
+{
+    // TODO: This is incredibly inefficient and uses loads of CPU time. It's a proof of concept only and needs to be
+    //       rewritten.
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        while(1)
+        {
+            usleep(500000); // half a second sleep
+            
+            @synchronized (self.receiveBuffer)
+            {
+                // we have something in the receive buffer. Check if it's a command
+                if (self.receiveBuffer.size > 0)
+                {
+                    // TODO : obviously we want to do more than just check if we have received any command,
+                    //        but for the moment I just want to flash the LED if we have seen a valid command response.
+                    while (self.receiveBuffer.size > 0)
+                    {
+                        NSString *line = [self.receiveBuffer dequeue];
+                        
+                        if ([line isEqualToString:@CMD_OK])
+                        {
+                            // Acknowledgement. Sent as a response to each command
+                            dispatch_async(dispatch_get_main_queue(), ^{ [self setLEDState:LEDStateGreen imgName:self->_cmdLED]; });
+                        }
+                        
+                        if ([line isEqualToString:@CMD_READY])
+                        {
+                            // Sent when the Arduino is ready to receive instructions
+                            dispatch_async(dispatch_get_main_queue(), ^{ [self setLEDState:LEDStateGreen imgName:self->_cmdLED]; });
+                        }
+                        
+                        if ([line isEqualToString:@RSP_ERR])
+                        {
+                            // Error response. Will be followed by an error code or text
+                            dispatch_async(dispatch_get_main_queue(), ^{ [self setLEDState:LEDStateRed imgName:self->_cmdLED]; });
+                        }
+                        
+                        if ([line isEqualToString:@CMD_ATCELL])
+                        {
+                            // The film has been positioned and is ready for a photo capture
+                            dispatch_async(dispatch_get_main_queue(), ^{ [self setLEDState:LEDStateGreen imgName:self->_cmdLED]; });
+                        }
+                    }
+                    
+                }
+                
+            }
+        }
+    });
+}
+
+// ------------------------------------------------------------------------------------------------
+
 - (void)startUSBReaderThread
 {
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
@@ -242,6 +302,27 @@ int openSerialPort(NSString *devicePath)
             }
         }
     });
+}
+
+
+// ------------------------------------------------------------------------------------------------
+
+typedef NS_ENUM(NSInteger, LEDState)
+{
+    LEDStateOff,
+    LEDStateRed,
+    LEDStateGreen
+};
+
+- (void)setLEDState:(LEDState)state imgName:(NSImageView *)imgLED
+{
+    NSString *imageName = @"";
+    switch (state) {
+        case LEDStateOff:   imageName = @"LED_Gray";  break;
+        case LEDStateRed:   imageName = @"LED_Red";   break;
+        case LEDStateGreen: imageName = @"LED_Green"; break;
+    }
+    imgLED.image = [NSImage imageNamed:imageName];
 }
 
 // ------------------------------------------------------------------------------------------------

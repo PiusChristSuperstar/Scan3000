@@ -700,7 +700,7 @@
                 </windowController>
                 <customObject id="Oky-zY-oP4" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="10.5" y="280.5"/>
+            <point key="canvasLocation" x="6" y="106"/>
         </scene>
         <!--View Controller-->
         <scene sceneID="hIz-AP-VOD">
@@ -756,7 +756,7 @@
                                             <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                             <size key="minSize" width="785" height="432"/>
-                                            <size key="maxSize" width="785" height="10000000"/>
+                                            <size key="maxSize" width="800" height="10000000"/>
                                         </textView>
                                     </subviews>
                                 </clipView>
@@ -802,15 +802,54 @@
                                     </connections>
                                 </buttonCell>
                             </button>
+                            <imageView identifier="ledImageView" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="d3q-lT-Nya" userLabel="ledImageView">
+                                <rect key="frame" x="502" y="470" width="24" height="24"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                                <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="LED_Grey" id="sBk-f2-e86"/>
+                                <connections>
+                                    <action selector="ledImageView:" target="XfG-lQ-9wD" id="IYV-hy-YJX"/>
+                                </connections>
+                            </imageView>
+                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="1cM-2Q-nWu">
+                                <rect key="frame" x="525" y="474" width="80" height="16"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                                <textFieldCell key="cell" lineBreakMode="clipping" title="USB Comms" id="dt3-XP-K9F">
+                                    <font key="font" metaFont="system"/>
+                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
+                            <imageView identifier="ledImageView" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="8fJ-h1-cqO" userLabel="ledImageView">
+                                <rect key="frame" x="502" y="446" width="24" height="24"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                                <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="LED_Grey" id="Xak-It-mm4"/>
+                                <connections>
+                                    <action selector="ledImageView:" target="XfG-lQ-9wD" id="unG-h8-7Cg"/>
+                                </connections>
+                            </imageView>
+                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="2tm-i9-0Sd">
+                                <rect key="frame" x="525" y="450" width="64" height="16"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                                <textFieldCell key="cell" lineBreakMode="clipping" title="Response" id="EUr-Fy-uDH">
+                                    <font key="font" metaFont="system"/>
+                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
                         </subviews>
                     </view>
                     <connections>
+                        <outlet property="cmdLED" destination="8fJ-h1-cqO" id="mbs-7o-IcT"/>
+                        <outlet property="commsLED" destination="d3q-lT-Nya" id="ef2-Iu-7BM"/>
                         <outlet property="outputTextView" destination="eU7-18-FLQ" id="hzB-8f-qdq"/>
                     </connections>
                 </viewController>
                 <customObject id="rPt-NT-nkU" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="6.5" y="687"/>
+            <point key="canvasLocation" x="6" y="687"/>
         </scene>
     </scenes>
+    <resources>
+        <image name="LED_Grey" width="30" height="30"/>
+    </resources>
 </document>
