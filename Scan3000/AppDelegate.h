@@ -6,9 +6,14 @@
 //
 
 #import <Cocoa/Cocoa.h>
+#import "AppSettings.h"
+
+@class SerialManager;
 
 @interface AppDelegate : NSObject <NSApplicationDelegate>
 
+@property (strong, nonatomic) SerialManager *serialManager;
+@property (strong, nonatomic) AppSettings *appSettings;
 
 @end
 

@@ -5,31 +5,13 @@
 //  Created by Pius Ott on 9/1/2026.
 //
 
-#include <termios.h>
-
 #import "ViewController.h"
-#import "SerialBuffer.h"
-#import "Utilities.h"
 #import "ArduinoResponse.h"
+#import "SerialManager.h"
+#import "AppDelegate.h"
 
-// The file that holds the instructions and configuration for our app
-#define SETTINGS_FILE "settings.xcconfig"
-
-// TODO: these should move to a class or the header.
+// TODO : I don't think this is needed anymore
 static NSString *gLastError = @"";      // most recent error message
-
-// settings values, initialised to default but can be overridden by values found in the SETTINGS_FILE
-static NSInteger gCellsToRead = 10;             // how many film cells to scan. This is just used for testing during development
-static NSString *gUsbPort = @"/dev/cu.usbserial-0001";  // USB port to communicate with the Arduino
-
-static NSString *gLogName = @"ScanBrain.log";           // Log file to use. Filename only. Log file will be in the Documents folder
-
-static NSString *gImageLocation = @"~/ScanBrain/Images";    // Location of where to store the captured photos
-
-static NSInteger gCapturePause = 2;     // How long to pause (in seconds) after sending Arduino instructions. This gives the
-                                        // Arduino time to process what has been received. But I'm also using this during development
-                                        // to simulate a delay during the photo capture
-
 
 @implementation ViewController
 
@@ -38,27 +20,23 @@ static NSInteger gCapturePause = 2;     // How long to pause (in seconds) after 
 - (void)viewDidLoad
 {
     [super viewDidLoad];
+    
+    AppDelegate *appDelegate = (AppDelegate *)NSApp.delegate;
+    self.serialManager = appDelegate.serialManager;
+    self.appSettings = appDelegate.appSettings;
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self
+        selector:@selector(serialDidReceiveLine:)
+        name:SerialDidReceiveLineNotification
+        object:nil];
 
     [self setLEDState:LEDStateOff imgName:_commsLED];
     [self setLEDState:LEDStateRed imgName:_cmdLED];
 
-    [self readSettings];
-
-    self.receiveBuffer = [[SerialBuffer alloc] init];
-    self.rawBuffer = [NSMutableData data];
-
-    self.usb = openSerialPort(gUsbPort);
-    if (self.usb == -1)
-    {
-        [self appendOutput:@"Failed to open USB port\n"];
-        return;
-    }
-    [self setLEDState:LEDStateGreen imgName:_commsLED];
+    // TODO : only do this if the SerialManager has opened the serial port successfully
+    //[self setLEDState:LEDStateGreen imgName:_commsLED];
     [self appendOutput:@"Monitoring USB input...\n\n"];
-
-    [self startUSBReaderThread];
-    [self startResponseReaderThread];            // start the thread that interprets responses we've received from the projector
-}
+ }
 
 // ------------------------------------------------------------------------------------------------
 
@@ -71,30 +49,25 @@ static NSInteger gCapturePause = 2;     // How long to pause (in seconds) after 
 
 // ------------------------------------------------------------------------------------------------
 
-// ------------------------------------------------------------------------------------------------
-
-// Function to open USB serial port
-int openSerialPort(NSString *devicePath)
+- (void)serialDidReceiveLine:(NSNotification *)note
 {
-    int fd = open([devicePath UTF8String], O_RDWR | O_NOCTTY | O_NONBLOCK);
-    if (fd == -1)
+    NSString *line = note.userInfo[SerialLineKey];
+
+    [self appendOutput:[NSString stringWithFormat:@"%@\n", line]];  // display in textview
+    
+    if ([line isEqualToString:@CMD_OK] ||       // Acknowledgement. Sent as a response to each command
+        [line isEqualToString:@CMD_READY] ||    // Sent when the Arduino is ready to receive instructions
+        [line isEqualToString:@CMD_ATCELL])     // The film has been positioned and is ready for a photo capture
     {
-        perror("Unable to open serial port");
-        return -1;
+        [self setLEDState:LEDStateGreen imgName:self->_cmdLED];
     }
+    else if ([line isEqualToString:@RSP_ERR])
+        [self setLEDState:LEDStateRed imgName:self->_cmdLED];
+}
 
-    struct termios options;
-    tcgetattr(fd, &options);
-    cfsetispeed(&options, B9600);
-    cfsetospeed(&options, B9600);
-    options.c_cflag |= (CLOCAL | CREAD);
-    options.c_cflag &= ~CSIZE;
-    options.c_cflag |= CS8;
-    options.c_cflag &= ~PARENB;
-    options.c_cflag &= ~CSTOPB;
-
-    tcsetattr(fd, TCSANOW, &options);
-    return fd;
+- (void)dealloc
+{
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -108,10 +81,22 @@ int openSerialPort(NSString *devicePath)
 
 // ------------------------------------------------------------------------------------------------
 
-- (void)sendCommand:(char *)cmd
+- (void)sendCommand:(NSString *)cmd
 {
     [self setLEDState:LEDStateRed imgName:_cmdLED];
 
+    NSString *response = [self.serialManager sendCommand:cmd];
+    if (response != NULL)
+    {
+        [self appendOutput:response];
+    }
+    else
+    {
+        [self appendOutput:[NSString stringWithFormat:@"Sent: %@\n", cmd]];
+    }
+   
+    
+/*
     ssize_t numBytes = write(self.usb, cmd, strlen(cmd));
     if (numBytes == -1)
     {
@@ -122,6 +107,7 @@ int openSerialPort(NSString *devicePath)
     {
         [self appendOutput:[NSString stringWithFormat:@"Sent: %s\n", cmd]];
     }
+ */
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -131,17 +117,12 @@ int openSerialPort(NSString *devicePath)
     [self appendOutput:@"\n=== Settings ===\n"];
     [self appendOutput:@"\nNote that for the time being, settings can only be changed through the config file.\n"];
     
-    NSString *settingsPath = [NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,
-                                             NSUserDomainMask,
-                                             YES).firstObject stringByAppendingPathComponent:@SETTINGS_FILE];
-
-    
-    [self appendOutput:[NSString stringWithFormat:@"\n\tConfiguration File\t\t: %s", [settingsPath UTF8String]]];
-    [self appendOutput:[NSString stringWithFormat:@"\n\tCells To Read\t\t\t: %li", gCellsToRead]];
-    [self appendOutput:[NSString stringWithFormat:@"\n\tCapture Pause\t\t\t: %li", gCapturePause]];
-    [self appendOutput:[NSString stringWithFormat:@"\n\tUSB Port\t\t\t\t: %s", [gUsbPort UTF8String]]];
-    [self appendOutput:[NSString stringWithFormat:@"\n\tLog File\t\t\t\t: %s", [gLogName UTF8String]]];
-    [self appendOutput:[NSString stringWithFormat:@"\n\tCaptured Image Location\t: %s\n\n", [gImageLocation UTF8String]]];
+    [self appendOutput:[NSString stringWithFormat:@"\n\tConfiguration File\t\t: %s", [_appSettings.configFile UTF8String]]];
+    [self appendOutput:[NSString stringWithFormat:@"\n\tCells To Read\t\t\t: %li", _appSettings.cellsToRead]];
+    [self appendOutput:[NSString stringWithFormat:@"\n\tCapture Pause\t\t\t: %li", _appSettings.capturePause]];
+    [self appendOutput:[NSString stringWithFormat:@"\n\tUSB Port\t\t\t\t: %s", [_appSettings.usbPortName UTF8String]]];
+    [self appendOutput:[NSString stringWithFormat:@"\n\tLog File\t\t\t\t: %s", [_appSettings.logFileName UTF8String]]];
+    [self appendOutput:[NSString stringWithFormat:@"\n\tCaptured Image Location\t: %s\n\n", [_appSettings.imagePath UTF8String]]];
     // TODO: maybe add an option to re-load settings file?
 }
 
@@ -149,24 +130,26 @@ int openSerialPort(NSString *devicePath)
 
 - (IBAction)showSerialBufferClicked:(id)sender
 {
-    @synchronized (self.receiveBuffer)
+    // TODO : this was just a test function and can be removed.
+    /*
+    @synchronized (self.serialManager.receiveBuffer)
     {
         [self appendOutput:[NSString stringWithFormat:
-            @"SerialBuffer size: %lu\n", self.receiveBuffer.size]];
+            @"SerialBuffer size: %lu\n", self.serialManager.receiveBuffer.size]];
 
-        while (self.receiveBuffer.size > 0)
+        while (self.serialManager.receiveBuffer.size > 0)
         {
-            NSString *line = [self.receiveBuffer dequeue];
+            NSString *line = [self.serialManager.receiveBuffer dequeue];
             [self appendOutput:[NSString stringWithFormat:@"[%@]\n", line]];
         }
-    }
+    }*/
 }
 
 // ------------------------------------------------------------------------------------------------
 
 - (IBAction)exitClicked:(id)sender
 {
-    close(self.usb);
+//    close(self.usb);
     [NSApp terminate:nil];
 }
 
@@ -174,88 +157,92 @@ int openSerialPort(NSString *devicePath)
 
 - (IBAction)nextCellClicked:(id)sender
 {
-    [self sendCommand:CMD_NEXTCELL];
+    [self sendCommand:@CMD_NEXTCELL];
 }
 
 // ------------------------------------------------------------------------------------------------
 
 - (IBAction)pingClicked:(id)sender
 {
-    [self sendCommand:CMD_PING];
+    [self sendCommand:@CMD_PING];
 }
 
 // ------------------------------------------------------------------------------------------------
 
 - (IBAction)rewindClicked:(id)sender
 {
-    [self sendCommand:CMD_REWIND];
+    [self sendCommand:@CMD_REWIND];
 }
 
 // ------------------------------------------------------------------------------------------------
 
 - (IBAction)optoClicked:(id)sender
 {
-    [self sendCommand:CMD_TESTOPTO];
+    [self sendCommand:@CMD_TESTOPTO];
 }
 
 // ------------------------------------------------------------------------------------------------
+/*
+- (void) stopResponseReaderThread
+{
+    // 1) Tell the thread to exit
+    self.responseThreadRunning = NO;
+
+    // 2) Wake it up if it's blocked
+    dispatch_semaphore_signal(self.receiveSemaphore);
+}
+
+- (void) stopUSBReaderThread
+{
+    
+}
 
 - (void)startResponseReaderThread
 {
-    // TODO: This is incredibly inefficient and uses loads of CPU time. It's a proof of concept only and needs to be
-    //       rewritten.
+    self.responseThreadRunning = YES;
+    
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        while(1)
+        while(self.responseThreadRunning)
         {
-            usleep(500000); // half a second sleep
+            // 🔴 Block until data is available
+            dispatch_semaphore_wait(self.receiveSemaphore, DISPATCH_TIME_FOREVER);
+
+            // have we received a shut down signal?
+            if (!self.responseThreadRunning)
+                break;
             
-            @synchronized (self.receiveBuffer)
+            NSString *line = nil;
+
+            @synchronized(self.receiveBuffer)
             {
-                // we have something in the receive buffer. Check if it's a command
                 if (self.receiveBuffer.size > 0)
-                {
-                    // TODO : obviously we want to do more than just check if we have received any command,
-                    //        but for the moment I just want to flash the LED if we have seen a valid command response.
-                    while (self.receiveBuffer.size > 0)
-                    {
-                        NSString *line = [self.receiveBuffer dequeue];
-                        
-                        if ([line isEqualToString:@CMD_OK])
-                        {
-                            // Acknowledgement. Sent as a response to each command
-                            dispatch_async(dispatch_get_main_queue(), ^{ [self setLEDState:LEDStateGreen imgName:self->_cmdLED]; });
-                        }
-                        
-                        if ([line isEqualToString:@CMD_READY])
-                        {
-                            // Sent when the Arduino is ready to receive instructions
-                            dispatch_async(dispatch_get_main_queue(), ^{ [self setLEDState:LEDStateGreen imgName:self->_cmdLED]; });
-                        }
-                        
-                        if ([line isEqualToString:@RSP_ERR])
-                        {
-                            // Error response. Will be followed by an error code or text
-                            dispatch_async(dispatch_get_main_queue(), ^{ [self setLEDState:LEDStateRed imgName:self->_cmdLED]; });
-                        }
-                        
-                        if ([line isEqualToString:@CMD_ATCELL])
-                        {
-                            // The film has been positioned and is ready for a photo capture
-                            dispatch_async(dispatch_get_main_queue(), ^{ [self setLEDState:LEDStateGreen imgName:self->_cmdLED]; });
-                        }
-                    }
-                    
-                }
+                    line = [self.receiveBuffer dequeue];
+            }
+
+            if (!line)
+                continue;
+
+            if ([line isEqualToString:@CMD_OK] ||       // Acknowledgement. Sent as a response to each command
+                [line isEqualToString:@CMD_READY] ||    // Sent when the Arduino is ready to receive instructions
+                [line isEqualToString:@CMD_ATCELL])     // The film has been positioned and is ready for a photo capture
+            {
+                dispatch_async(dispatch_get_main_queue(), ^{ [self setLEDState:LEDStateGreen imgName:self->_cmdLED]; });
                 
+
+            }
+            else if ([line isEqualToString:@RSP_ERR])   // Error response. Will be followed by an error code or text
+            {
+                dispatch_async(dispatch_get_main_queue(), ^{ [self setLEDState:LEDStateRed imgName:self->_cmdLED]; });
             }
         }
     });
 }
-
+*/
 // ------------------------------------------------------------------------------------------------
-
+/*
 - (void)startUSBReaderThread
 {
+    
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         char readBuf[256];
 
@@ -279,14 +266,16 @@ int openSerialPort(NSString *devicePath)
                         NSUInteger lineLen = newline - bytes;
 
                         NSData *lineData = [NSData dataWithBytes:bytes length:lineLen];
-                        NSString *line = [[NSString alloc] initWithData:lineData
-                                                               encoding:NSUTF8StringEncoding];
+                        NSString *line = [[NSString alloc] initWithData:lineData                                                       encoding:NSUTF8StringEncoding];
 
                         if (line)
                         {
                             @synchronized(self.receiveBuffer)
                             {
                                 [self.receiveBuffer enqueue:line];
+                                
+                                // let the receive handler know that we've received something it may want to process
+                                dispatch_semaphore_signal(self.receiveSemaphore);
                             }
 
                             dispatch_async(dispatch_get_main_queue(), ^{
@@ -303,7 +292,7 @@ int openSerialPort(NSString *devicePath)
         }
     });
 }
-
+*/
 
 // ------------------------------------------------------------------------------------------------
 
@@ -326,77 +315,6 @@ typedef NS_ENUM(NSInteger, LEDState)
 }
 
 // ------------------------------------------------------------------------------------------------
-
-/// Load the configuration settings. If no file is defined, or the file could not be opened, we just use default values.
-- (void)readSettings
-{
-
-    NSError *error = nil;
-
-    NSString *settingsPath = [NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,
-                                             NSUserDomainMask,
-                                             YES).firstObject stringByAppendingPathComponent:@SETTINGS_FILE];
-    
-    NSString *fileContents = [NSString stringWithContentsOfFile:settingsPath encoding:NSUTF8StringEncoding error:&error];
-    
-    if (error)
-    {
-        [self appendOutput:[NSString stringWithFormat:
-            @"Error reading config file: [%@] - using default configurations instead\n", error.localizedDescription]];
-        return;
-    }
-
-    // split all lines into an array
-    NSArray *configLines = [fileContents componentsSeparatedByString:@"\n"];
-    
-    for (int i = 0; i < configLines.count; i++)
-    {
-        if ([configLines[i] hasPrefix:@"//"])
-        {
-            // Comment line, ignore it
-        }
-        else
-        {
-            NSArray *components = [configLines[i] componentsSeparatedByString:@"="];
-            
-            // Ensure there are exactly two components
-            if (components.count == 2)
-            {
-                NSString *settingName = [components[0] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
-                NSString *valueWithQuotes = components[1];
-                
-                // Strip the single quotes and line end from the value
-                NSString *settingValue = [valueWithQuotes stringByTrimmingCharactersInSet:[NSCharacterSet characterSetWithCharactersInString:@"'\n"]];
-                
-                NSLog(@"Setting: %@, Value: %@\n", settingName, settingValue);
-                if ([settingName isEqualToString:@"CELLS_TO_READ"])
-                {
-                    gCellsToRead = [Utilities getNumberFromString:settingValue];
-                }
-                else if ([settingName isEqualToString:@"CAPTURE_PAUSE"])
-                {
-                    gCapturePause = [Utilities getNumberFromString:settingValue];
-                }
-                else if ([settingName isEqualToString:@"USB_PORT"])
-                {
-                    gUsbPort = settingValue;
-                }
-                else if ([settingName isEqualToString:@"LOGFILE_NAME"])
-                {
-                    gLogName = settingValue;
-                }
-                else if ([settingName isEqualToString:@"IMAGE_LOCATION"])
-                {
-                    gImageLocation = settingValue;
-                }
-            }
-            else
-            {
-                //NSLog(@"The input string [%@] is invalid", configLine);
-            }
-        }
-    }
-}
 
 // ------------------------------------------------------------------------------------------------
 

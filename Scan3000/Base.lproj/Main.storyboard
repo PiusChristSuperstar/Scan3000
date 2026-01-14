@@ -802,7 +802,7 @@
                                     </connections>
                                 </buttonCell>
                             </button>
-                            <imageView identifier="ledImageView" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="d3q-lT-Nya" userLabel="ledImageView">
+                            <imageView identifier="ledImageView" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="d3q-lT-Nya" userLabel="ledComms">
                                 <rect key="frame" x="502" y="470" width="24" height="24"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                                 <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="LED_Grey" id="sBk-f2-e86"/>
@@ -819,7 +819,7 @@
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
-                            <imageView identifier="ledImageView" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="8fJ-h1-cqO" userLabel="ledImageView">
+                            <imageView identifier="ledImageView" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="8fJ-h1-cqO" userLabel="ledResponse">
                                 <rect key="frame" x="502" y="446" width="24" height="24"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                                 <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="LED_Grey" id="Xak-It-mm4"/>

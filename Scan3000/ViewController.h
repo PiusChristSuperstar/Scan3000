@@ -7,17 +7,17 @@
 
 #import <Cocoa/Cocoa.h>
 
-@class SerialBuffer;
+@class SerialManager;
+@class AppSettings;
 
 @interface ViewController : NSViewController
-
-@property (nonatomic, strong) SerialBuffer *receiveBuffer;
-@property (nonatomic, assign) int usb;
-@property (nonatomic, strong) NSMutableData *rawBuffer;
 
 @property (weak) IBOutlet NSTextView *outputTextView;
 @property (weak) IBOutlet NSImageView *commsLED;
 @property (weak) IBOutlet NSImageView *cmdLED;
+
+@property (nonatomic, weak) SerialManager *serialManager;       // handles serial USB comms
+@property (nonatomic, weak) AppSettings *appSettings;           // contains application settings
 
 - (IBAction)showSettingsClicked:(id)sender;
 - (IBAction)nextCellClicked:(id)sender;
