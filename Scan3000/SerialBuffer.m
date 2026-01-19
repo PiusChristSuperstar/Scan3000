@@ -1,6 +1,8 @@
 //
 //  SerialBuffer.m
-//  FIFO buffer that holds data read via the USB serial port until it can be processed
+//  FIFO buffer that holds data read via the USB serial port until it can be processed. We
+//  use a SerialData object that contains both, the raw text as well as an interpreted type
+//  of the response in the buffer.
 //
 //  Created by Pius Ott on 3/12/2024.
 //  Copyright © 2024 Worlddom. All rights reserved.
@@ -8,6 +10,15 @@
 
 #import "SerialBuffer.h"
 #import "ArduinoResponse.h"
+
+// -------------------------------------------------------------------------------------------
+
+@implementation SerialData
+// nothing to do.
+@end
+
+// -------------------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------------------
 
 @implementation SerialBuffer
 
@@ -27,37 +38,36 @@
 
 - (void)enqueue:(NSString *)str
 {
-    /*
-    NSComparisonResult result = [str compare:@CMD_OK];
-    if (result == NSOrderedSame)
-        [self.buffer addObject:@CMD_OK];
+    SerialData *newData = [SerialData new];
+    newData.plainText = str;
     
-    if (strncmp(string, CMD_OK, strlen(CMD_OK)) == 0)
-        [self.buffer addObject:CMD_OK];
-    else if (strncmp(str, RSP_ERR, strlen(RSP_ERR)) == 0)
-        response = Error;
-    else if (strncmp(str, CMD_READY, strlen(CMD_READY)) == 0)
-        response = Ready;
-    else if (strncmp(str, CMD_ATCELL, strlen(CMD_ATCELL)) == 0)
-        response = AtCell;
-*/
+    if ([str isEqualToString:@CMD_OK])
+        newData.command = cmdOk;
+    else if ([str isEqualToString:@RSP_ERR])
+        newData.command = cmdErr;
+    else if ([str isEqualToString:@CMD_READY])
+        newData.command = cmdReady;
+    else if ([str isEqualToString:@CMD_ATCELL])
+        newData.command = cmdAttCell;
+    else
+        newData.command = cmdUnknown;    // usually logging data from the projector
+    // TODO: we should probably also detect log messages separately rather than just flagging them as unknowns
     
-    
-    [self.buffer addObject:str];
+    [self.buffer addObject:newData];
 }
 
 // -------------------------------------------------------------------------------------------
 
-- (NSString *)dequeue
+- (SerialData *)dequeue
 {
     if ([self isEmpty])
     {
         return nil; // Return nil if the buffer is empty
     }
     
-    NSString *firstString = self.buffer[0];
+    SerialData *firstItem = self.buffer[0];
     [self.buffer removeObjectAtIndex:0];
-    return firstString;
+    return firstItem;
 }
 
 // -------------------------------------------------------------------------------------------

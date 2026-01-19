@@ -722,7 +722,7 @@
                                 </connections>
                             </button>
                             <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="nKM-kP-Ter">
-                                <rect key="frame" x="13" y="465" width="89" height="32"/>
+                                <rect key="frame" x="359" y="465" width="89" height="32"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <buttonCell key="cell" type="push" title="Next Cell" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="LJT-KV-T3b">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -730,17 +730,6 @@
                                 </buttonCell>
                                 <connections>
                                     <action selector="nextCellClicked:" target="XfG-lQ-9wD" id="BNw-Aj-FRk"/>
-                                </connections>
-                            </button>
-                            <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="2dP-if-CGh">
-                                <rect key="frame" x="641" y="433" width="146" height="32"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
-                                <buttonCell key="cell" type="push" title="Show Serial Buffer" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="Nso-ep-J9f">
-                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                                    <font key="font" metaFont="system"/>
-                                </buttonCell>
-                                <connections>
-                                    <action selector="showSerialBufferClicked:" target="XfG-lQ-9wD" id="hXR-eR-Sgr"/>
                                 </connections>
                             </button>
                             <scrollView fixedFrame="YES" borderType="none" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" translatesAutoresizingMaskIntoConstraints="NO" id="yXB-Jp-Cwf">
@@ -770,7 +759,7 @@
                                 </scroller>
                             </scrollView>
                             <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="UXi-Re-OFi">
-                                <rect key="frame" x="172" y="465" width="120" height="32"/>
+                                <rect key="frame" x="241" y="465" width="120" height="32"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <buttonCell key="cell" type="push" title="Ping Projector" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="i4u-BF-AkZ">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -781,7 +770,7 @@
                                 </connections>
                             </button>
                             <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="YNu-qz-2PM">
-                                <rect key="frame" x="173" y="440" width="119" height="32"/>
+                                <rect key="frame" x="242" y="440" width="119" height="32"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <buttonCell key="cell" type="push" title="Check Sensor" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="DQv-ql-op5">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -836,9 +825,25 @@
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
+                            <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="2dP-if-CGh">
+                                <rect key="frame" x="13" y="463" width="98" height="32"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                <buttonCell key="cell" type="push" title="Start Scan" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="Nso-ep-J9f">
+                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                </buttonCell>
+                                <connections>
+                                    <action selector="startScanClicked:" target="XfG-lQ-9wD" id="hXR-eR-Sgr"/>
+                                </connections>
+                            </button>
                         </subviews>
                     </view>
                     <connections>
+                        <outlet property="btnCheckSensor" destination="YNu-qz-2PM" id="7FT-Xj-fem"/>
+                        <outlet property="btnNextCell" destination="nKM-kP-Ter" id="fts-n2-hGi"/>
+                        <outlet property="btnPing" destination="UXi-Re-OFi" id="8QC-h6-hmv"/>
+                        <outlet property="btnRewind" destination="vL5-jc-ciy" id="KK3-aS-ntk"/>
+                        <outlet property="btnStartScan" destination="2dP-if-CGh" id="Qja-6a-fmB"/>
                         <outlet property="cmdLED" destination="8fJ-h1-cqO" id="mbs-7o-IcT"/>
                         <outlet property="commsLED" destination="d3q-lT-Nya" id="ef2-Iu-7BM"/>
                         <outlet property="outputTextView" destination="eU7-18-FLQ" id="hzB-8f-qdq"/>

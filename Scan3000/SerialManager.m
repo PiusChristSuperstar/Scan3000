@@ -32,7 +32,6 @@ NSString * const SerialLineKey = @"SerialLineKey";
         self.receiveBuffer = [[SerialBuffer alloc] init];
         self.rawBuffer = [NSMutableData data];
         self.receiveSemaphore = dispatch_semaphore_create(0);   // will be flagged when we receive data from projector
-
     }
     return self;
 }
@@ -41,17 +40,25 @@ NSString * const SerialLineKey = @"SerialLineKey";
 
 - (void)start
 {
+    // clear all scanner state flags
+    self.scannerIsReady = false;
+    self.scannerAtCell = false;
+    self.scannerOk = false;
+    self.scannerTimeout = false;
+    self.scannerError = false;
+    
     // start USB thread, reader thread, etc
-    self.usb = openSerialPort(_appSettings.usbPortName);
+    //self.usb = openSerialPort(_appSettings.usbPortName);
+    self.usb = [self openSerialPort: _appSettings.usbPortName];
     if (self.usb == -1)
     {
         [self notifyView: @"Failed to open USB port\n"];
-
+        
         return;
     }
-
+    
     [self notifyView: [NSString stringWithFormat:@"Opened USB port [%@]\n", _appSettings.usbPortName]];
-
+    
     [self startUSBReaderThread];
     [self startResponseReaderThread];            // start the thread that interprets responses we've received from the projector
 }
@@ -63,9 +70,9 @@ NSString * const SerialLineKey = @"SerialLineKey";
 {
     dispatch_async(dispatch_get_main_queue(), ^{
         [[NSNotificationCenter defaultCenter]
-            postNotificationName:SerialDidReceiveLineNotification
-            object:self
-            userInfo:@{ SerialLineKey : displayText }];
+         postNotificationName:SerialDidReceiveLineNotification
+         object:self
+         userInfo:@{ SerialLineKey : displayText }];
     });
 }
 
@@ -78,6 +85,12 @@ NSString * const SerialLineKey = @"SerialLineKey";
 
 - (NSString *)sendCommand:(NSString *)cmd;
 {
+    // clear appropriate scanner state flags
+    self.scannerAtCell = false;
+    self.scannerOk = false;
+    self.scannerTimeout = false;
+    self.scannerError = false;
+    
     ssize_t numBytes = write(self.usb, [cmd UTF8String], cmd.length);
     if (numBytes == -1)
     {
@@ -88,7 +101,7 @@ NSString * const SerialLineKey = @"SerialLineKey";
 
 // ------------------------------------------------------------------------------------------------
 
-int openSerialPort(NSString *devicePath)
+- (int) openSerialPort:(NSString *)devicePath;
 {
     int fd = open([devicePath UTF8String], O_RDWR | O_NOCTTY | O_NONBLOCK);
     if (fd == -1)
@@ -96,7 +109,7 @@ int openSerialPort(NSString *devicePath)
         perror("Unable to open serial port");
         return -1;
     }
-
+    
     struct termios options;
     tcgetattr(fd, &options);
     cfsetispeed(&options, B9600);
@@ -106,18 +119,18 @@ int openSerialPort(NSString *devicePath)
     options.c_cflag |= CS8;
     options.c_cflag &= ~PARENB;
     options.c_cflag &= ~CSTOPB;
-
+    
     tcsetattr(fd, TCSANOW, &options);
     return fd;
 }
 
 // ------------------------------------------------------------------------------------------------
-    
+
 - (void) stopResponseReaderThread
 {
     // 1) Tell the thread to exit
     self.responseThreadRunning = NO;
-
+    
     // 2) Wake it up if it's blocked
     dispatch_semaphore_signal(self.receiveSemaphore);
 }
@@ -128,7 +141,7 @@ int openSerialPort(NSString *devicePath)
 {
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         char readBuf[256];
-
+        
         while (1)
         {
             ssize_t bytesRead = read(self.usb, readBuf, sizeof(readBuf));
@@ -137,20 +150,20 @@ int openSerialPort(NSString *devicePath)
                 @synchronized(self.rawBuffer)
                 {
                     [self.rawBuffer appendBytes:readBuf length:bytesRead];
-
+                    
                     while (1)
                     {
                         const char *bytes = self.rawBuffer.bytes;
                         NSUInteger len = self.rawBuffer.length;
-
+                        
                         char *newline = memchr(bytes, '\n', len);
                         if (!newline) break;
-
+                        
                         NSUInteger lineLen = newline - bytes;
-
+                        
                         NSData *lineData = [NSData dataWithBytes:bytes length:lineLen];
                         NSString *line = [[NSString alloc] initWithData:lineData                                                       encoding:NSUTF8StringEncoding];
-
+                        
                         if (line)
                         {
                             @synchronized(self.receiveBuffer)
@@ -160,19 +173,19 @@ int openSerialPort(NSString *devicePath)
                                 // let the receive handler know that we've received something it may want to process
                                 dispatch_semaphore_signal(self.receiveSemaphore);
                             }
-
+                            
                             // let the ViewController know that we have data to display.
                             dispatch_async(dispatch_get_main_queue(), ^{
                                 [[NSNotificationCenter defaultCenter]
-                                    postNotificationName:SerialDidReceiveLineNotification
-                                    object:self
-                                    userInfo:@{ SerialLineKey : line }];
+                                 postNotificationName:SerialDidReceiveLineNotification
+                                 object:self
+                                 userInfo:@{ SerialLineKey : line }];
                             });
                         }
-
+                        
                         [self.rawBuffer replaceBytesInRange:NSMakeRange(0, lineLen + 1)
-                                                 withBytes:NULL
-                                                    length:0];
+                                                  withBytes:NULL
+                                                     length:0];
                     }
                 }
             }
@@ -182,6 +195,9 @@ int openSerialPort(NSString *devicePath)
 
 // ------------------------------------------------------------------------------------------------
 
+/*
+ Thread that checks the serial buffer and interprets the responses we may have received from the scanner.
+ */
 - (void)startResponseReaderThread
 {
     self.responseThreadRunning = YES;
@@ -196,43 +212,45 @@ int openSerialPort(NSString *devicePath)
             if (!self.responseThreadRunning)
                 break;
             
-            NSString *line = nil;
-
+            SerialData *dataItem = nil;
             @synchronized(self.receiveBuffer)
             {
                 if (self.receiveBuffer.size > 0)
-                    line = [self.receiveBuffer dequeue];
+                {
+                    dataItem = [self.receiveBuffer dequeue];
+                }
             }
 
-            if (!line)
+            if (!dataItem)
                 continue;
-
-            if ([line isEqualToString:@CMD_OK] ||       // Acknowledgement. Sent as a response to each command
-                [line isEqualToString:@CMD_READY] ||    // Sent when the Arduino is ready to receive instructions
-                [line isEqualToString:@CMD_ATCELL])     // The film has been positioned and is ready for a photo capture
-            {
-                /*
-                 TODO : send notification to ViewController
-                 
-                dispatch_async(dispatch_get_main_queue(), ^{ [self setLEDState:LEDStateGreen imgName:self->_cmdLED]; });
-                */
-                
-                /*
-                TODO: we need to handle each of the three responses separately
-                 CMD_OK - clear a flag that will be set whenever we launch a command to let us know it has been handled successfully
-                 CMD_READY - set a global 'projector ready' flag
-                 CMD_ATCELL - increase a counter of cells handled
-                            - take a photo
-                 */
-            }
-            else if ([line isEqualToString:@RSP_ERR])   // Error response. Will be followed by an error code or text
-            {
-                /*
-                 TODO : send notification to ViewController
-                 
-                dispatch_async(dispatch_get_main_queue(), ^{ [self setLEDState:LEDStateRed imgName:self->_cmdLED]; });
-                 */
-            }
+            
+            //dispatch_async(dispatch_get_main_queue(), ^{
+                switch (dataItem.command)
+                {
+                    case cmdOk:
+                        self.scannerOk = true;
+                        break;
+                        
+                    case cmdErr:
+                        self.scannerTimeout = true;
+                        self.scannerError = true;
+                        break;
+                        
+                    case cmdReady:
+                        self.scannerIsReady = true;
+                        break;
+                        
+                    case cmdAttCell:
+                        self.scannerAtCell = true;
+                        break;
+                        
+                    case cmdLog:
+                    case cmdUnknown:
+                        // For the time being, we don't handle these since we don't need them. However in
+                        // the future we should probably at least log them.
+                        break;
+                }
+           // });
         }
     });
 }

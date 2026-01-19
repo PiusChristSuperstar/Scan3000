@@ -23,7 +23,13 @@ extern NSString * const SerialLineKey;
 @property (strong) dispatch_semaphore_t receiveSemaphore;
 @property (atomic, assign) BOOL responseThreadRunning;
 
-//- (int) openSerialPort:(NSString *)devicePath;
+// these are flags set when we've received corresponding responses from the scanner. Once each response has been
+// handled, we clear it
+@property (nonatomic, assign) BOOL scannerIsReady;
+@property (nonatomic, assign) BOOL scannerAtCell;
+@property (nonatomic, assign) BOOL scannerOk;
+@property (nonatomic, assign) BOOL scannerTimeout;
+@property (nonatomic, assign) BOOL scannerError;
 
 - (void)start;
 - (void)stop;
