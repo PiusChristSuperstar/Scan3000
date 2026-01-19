@@ -218,12 +218,23 @@
     [self.camera capturePhotoWithCompletion:^(NSData *imageData) {
         if (imageData)
         {
-            NSString *path = [NSTemporaryDirectory()
-                stringByAppendingPathComponent:@"photo.jpg"];
-
-            [imageData writeToFile:path atomically:YES];
-            NSLog(@"Saved photo to %@", path);
-            [self appendOutput:[NSString stringWithFormat:@"Saved photo to: %@\n", path]];
+            // We save the images with a preceding date and time in the file name so we can easily
+            // sort them by sequence taken to later combine them into a movie.
+            NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+            [formatter setDateFormat:@"yyyyMMdd_HHmmss"];
+            NSString *timestamp = [formatter stringFromDate:[NSDate date]];
+            NSString *fileName = [NSString stringWithFormat:@"%@_scan.jpg", timestamp];
+            NSString *fullPath = [self.appSettings.imagePath stringByAppendingPathComponent:fileName];
+            NSString *expandedPath = [fullPath stringByExpandingTildeInPath];
+            
+            // TODO: we should check that the path exists and we actually have write access to it.
+            //       for the moment the app only has access to the ~/Pictures and its ~/Library/Containers/[Your-Bundle-ID]
+            //       paths. If we can't save the file, the app just fails silently at the moment.
+            //       It would probably be saver and easier if we just default to using the Pictures path and create a
+            //       'Scan3000' directory in it and always save the images there.
+            [imageData writeToFile:expandedPath atomically:YES];
+            NSLog(@"Saved photo to %@", expandedPath);
+            [self appendOutput:[NSString stringWithFormat:@"Saved photo to: %@\n", expandedPath]];
         }
 
         // Optional: release after capture
@@ -292,6 +303,9 @@
                         dispatch_async(dispatch_get_main_queue(), ^{
                             [self appendOutput:[NSString stringWithFormat:@"Scanner is at cell. We have %li scans remaining.\n", scansRemaining - 1]];
                         });
+                        
+                        // we're in position, take a photo and save it to a file.
+                        [self photoCapture];
                         waitingForScannerResponse = false;
                     }
                     else
