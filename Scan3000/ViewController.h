@@ -9,6 +9,7 @@
 
 @class SerialManager;
 @class AppSettings;
+@class CameraCapture;
 
 @interface ViewController : NSViewController
 
@@ -18,6 +19,7 @@
 
 @property (nonatomic, weak) SerialManager *serialManager;       // handles serial USB comms
 @property (nonatomic, weak) AppSettings *appSettings;           // contains application settings
+@property (strong) CameraCapture *camera;                       // will run the photo capture
 
 @property (weak) IBOutlet NSButton *btnRewind;
 @property (weak) IBOutlet NSButton *btnPing;

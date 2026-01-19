@@ -9,6 +9,7 @@
 #import "ArduinoResponse.h"
 #import "SerialManager.h"
 #import "AppDelegate.h"
+#import "CameraCapture.h"
 
 // ------------------------------------------------------------------------------------------------
 
@@ -29,7 +30,7 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-    
+
     _scanThreadRunning = false;
     
     AppDelegate *appDelegate = (AppDelegate *)NSApp.delegate;
@@ -190,7 +191,10 @@
 
 - (IBAction)optoClicked:(id)sender
 {
-    [self sendCommand:@CMD_TESTOPTO];
+    // TODO: uncomment this again. I'm just quickly hijacking this function to test photo capture
+    //[self sendCommand:@CMD_TESTOPTO];
+    
+    [self photoCapture];
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -203,6 +207,29 @@
     _btnPing.enabled = doEnable;
     _btnCheckSensor.enabled = doEnable;
     _btnNextCell.enabled = doEnable;
+}
+
+// ------------------------------------------------------------------------------------------------
+
+- (void)photoCapture
+{
+    self.camera = [[CameraCapture alloc] init];
+
+    [self.camera capturePhotoWithCompletion:^(NSData *imageData) {
+        if (imageData)
+        {
+            NSString *path = [NSTemporaryDirectory()
+                stringByAppendingPathComponent:@"photo.jpg"];
+
+            [imageData writeToFile:path atomically:YES];
+            NSLog(@"Saved photo to %@", path);
+            [self appendOutput:[NSString stringWithFormat:@"Saved photo to: %@\n", path]];
+        }
+
+        // Optional: release after capture
+        self.camera = nil;
+    }];
+
 }
 
 // ------------------------------------------------------------------------------------------------

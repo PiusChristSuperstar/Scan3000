@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		5762AA4E2F10CBED009D23B2 /* settings.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 5762AA4D2F10CBED009D23B2 /* settings.xcconfig */; };
+		57CD47252F1E3DA7001A5DCC /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 57CD47242F1E3DA7001A5DCC /* AVFoundation.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -32,6 +33,7 @@
 		5762AA2A2F10CAB7009D23B2 /* Scan3000Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Scan3000Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		5762AA342F10CAB7009D23B2 /* Scan3000UITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Scan3000UITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		5762AA4D2F10CBED009D23B2 /* settings.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = settings.xcconfig; sourceTree = "<group>"; };
+		57CD47242F1E3DA7001A5DCC /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -57,6 +59,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				57CD47252F1E3DA7001A5DCC /* AVFoundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -84,6 +87,7 @@
 				5762AA172F10CAB6009D23B2 /* Scan3000 */,
 				5762AA2D2F10CAB7009D23B2 /* Scan3000Tests */,
 				5762AA372F10CAB7009D23B2 /* Scan3000UITests */,
+				57CD47232F1E3DA6001A5DCC /* Frameworks */,
 				5762AA162F10CAB6009D23B2 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -96,6 +100,14 @@
 				5762AA342F10CAB7009D23B2 /* Scan3000UITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		57CD47232F1E3DA6001A5DCC /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				57CD47242F1E3DA7001A5DCC /* AVFoundation.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -328,6 +340,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = Yes;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MACOSX_DEPLOYMENT_TARGET = 15.4;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
@@ -384,6 +397,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = Yes;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MACOSX_DEPLOYMENT_TARGET = 15.4;
 				MTL_ENABLE_DEBUG_INFO = NO;
@@ -404,7 +418,7 @@
 				DEVELOPMENT_TEAM = ARHMSH5939;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_MetalCaptureEnabled = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "This app needs camera access to scan projector film cells.";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSMainStoryboardFile = Main;
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
@@ -433,7 +447,7 @@
 				DEVELOPMENT_TEAM = ARHMSH5939;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_MetalCaptureEnabled = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "This app needs camera access to scan projector film cells.";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSMainStoryboardFile = Main;
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
