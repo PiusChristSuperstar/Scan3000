@@ -11,10 +11,14 @@
 
 @implementation AppDelegate
 
+// -------------------------------------------------------------------------------------------
+
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
     
 }
+
+// -------------------------------------------------------------------------------------------
 
 - (AppSettings *)appSettings
 {
@@ -26,6 +30,8 @@
     }
     return _appSettings;
 }
+
+// -------------------------------------------------------------------------------------------
 
 - (SerialManager *)serialManager
 {
@@ -39,20 +45,22 @@
     return _serialManager;
 }
 
+// -------------------------------------------------------------------------------------------
+
 - (void)applicationWillTerminate:(NSNotification *)aNotification
 {
     [self.serialManager stop];
-    /*
-    // Insert code here to tear down your application
-    [self stopResponseReaderThread];
-    [self stopUSBReaderThread];
-     */
 }
 
+// -------------------------------------------------------------------------------------------
 
-- (BOOL)applicationSupportsSecureRestorableState:(NSApplication *)app {
+
+- (BOOL)applicationSupportsSecureRestorableState:(NSApplication *)app
+{
     return YES;
 }
 
+// -------------------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------------------
 
 @end

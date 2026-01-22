@@ -14,10 +14,11 @@
 #import "SerialBuffer.h"
 #import "ArduinoResponse.h"
 
-
+// Keys for notifications we're sending out to observers
 NSString * const SerialDidReceiveLineNotification = @"SerialDidReceiveLineNotification";
 NSString * const SerialLineKey = @"SerialLineKey";
-
+NSString * const PortChangedStateNotification = @"PortChangedStateNotification";
+NSString * const PortChangedStateKey = @"PortChangedStateKey";
 
 @implementation SerialManager
 
@@ -28,12 +29,19 @@ NSString * const SerialLineKey = @"SerialLineKey";
     self = [super init];
     if (self)
     {
-        
+        self.usb = -1;      // file descriptor. If this is > 0 then the port is currently open.
         self.receiveBuffer = [[SerialBuffer alloc] init];
         self.rawBuffer = [NSMutableData data];
         self.receiveSemaphore = dispatch_semaphore_create(0);   // will be flagged when we receive data from projector
     }
     return self;
+}
+
+// -------------------------------------------------------------------------------------------
+
+- (BOOL)isPortOpen
+{
+    return (self.usb > 0);  // true while port is open.
 }
 
 // -------------------------------------------------------------------------------------------
@@ -48,19 +56,31 @@ NSString * const SerialLineKey = @"SerialLineKey";
     self.scannerError = false;
     
     // start USB thread, reader thread, etc
-    //self.usb = openSerialPort(_appSettings.usbPortName);
     self.usb = [self openSerialPort: _appSettings.usbPortName];
+    [self notifyCommsState:self.isPortOpen];
     if (self.usb == -1)
     {
         [self notifyView: @"Failed to open USB port\n"];
         
         return;
     }
-    
     [self notifyView: [NSString stringWithFormat:@"Opened USB port [%@]\n", _appSettings.usbPortName]];
     
     [self startUSBReaderThread];
     [self startResponseReaderThread];            // start the thread that interprets responses we've received from the projector
+}
+
+// -------------------------------------------------------------------------------------------
+
+// send a message to the ViewController to allow it to indicate the current port state
+- (void)notifyCommsState:(BOOL)isPortOpen
+{
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [[NSNotificationCenter defaultCenter]
+         postNotificationName:PortChangedStateNotification
+         object:self
+         userInfo:@{ PortChangedStateKey : @(isPortOpen) }];  // need to box that into a number because BOOL can't be sent.
+    });
 }
 
 // -------------------------------------------------------------------------------------------
@@ -93,6 +113,8 @@ NSString * const SerialLineKey = @"SerialLineKey";
         close(self.usb);
         self.usb = -1; // Reset to prevent double-closing
     }
+    
+    [self notifyCommsState:self.isPortOpen];
 }
 
 // -------------------------------------------------------------------------------------------

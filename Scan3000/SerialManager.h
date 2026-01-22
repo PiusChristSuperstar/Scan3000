@@ -12,6 +12,8 @@
 
 extern NSString * const SerialDidReceiveLineNotification;
 extern NSString * const SerialLineKey;
+extern NSString * const PortChangedStateNotification;
+extern NSString * const PortChangedStateKey;
 
 @interface SerialManager : NSObject
 
@@ -35,6 +37,7 @@ extern NSString * const SerialLineKey;
 - (void)start;
 - (void)stop;
 - (void)notifyView:(NSString *)displayText;
+- (void)notifyCommsState:(BOOL)portIsOpen;
 
 - (NSString *)sendCommand:(NSString *)cmd;
 

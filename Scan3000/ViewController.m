@@ -38,18 +38,28 @@
     AppDelegate *appDelegate = (AppDelegate *)NSApp.delegate;
     self.serialManager = appDelegate.serialManager;
     self.appSettings = appDelegate.appSettings;
-    
-    [[NSNotificationCenter defaultCenter] addObserver:self
-        selector:@selector(serialDidReceiveLine:)
-        name:SerialDidReceiveLineNotification
-        object:nil];
 
+    // Observer that handles received text that we need to display
+    [[NSNotificationCenter defaultCenter]
+        addObserver:self
+           selector:@selector(serialDidReceiveLine:)
+               name:SerialDidReceiveLineNotification
+             object:nil];
+
+    // Observer that handles call to shut down the application
     [[NSNotificationCenter defaultCenter]
         addObserver:self
            selector:@selector(appWillTerminate:)
                name:NSApplicationWillTerminateNotification
              object:nil];
     
+    // Observer that handles serial port status notifications
+    [[NSNotificationCenter defaultCenter]
+        addObserver:self
+           selector:@selector(serialStatusChange:)
+               name:PortChangedStateNotification
+             object:nil];
+
     [self setLEDState:LEDStateOff imgName:_commsLED];
     [self setLEDState:LEDStateRed imgName:_cmdLED];
 
@@ -92,6 +102,31 @@
     [super setRepresentedObject:representedObject];
 
     // Update the view, if already loaded.
+}
+
+// ------------------------------------------------------------------------------------------------
+
+- (void)serialStatusChange:(NSNotification *)note
+{
+    NSLog(@"Received USB Serial status change.");
+    [self appendOutput:@"Received USB Serial status change.\n"];  // display in textview
+    
+    NSDictionary *userInfo = note.userInfo;
+    // Extract the NSNumber and get its boolean value
+    BOOL isOpen = [userInfo[PortChangedStateKey] boolValue];
+    
+    
+    if (isOpen)
+    {
+        [self setLEDState:LEDStateGreen imgName:_commsLED];
+        
+        NSLog(@"The port is now open.");
+    }
+    else
+    {
+        [self setLEDState:LEDStateRed imgName:_commsLED];
+        NSLog(@"The port is now closed.");
+    }
 }
 
 // ------------------------------------------------------------------------------------------------
