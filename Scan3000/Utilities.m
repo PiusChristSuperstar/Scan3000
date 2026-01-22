@@ -34,6 +34,26 @@
 
 // -------------------------------------------------------------------------------------------
 
++(BOOL)createPathIfNotExist:(NSString *)fullPath
+{
+    NSError *error = nil;
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+
+    // This single call handles both the "check" and the "creation"
+    BOOL success = [fileManager createDirectoryAtPath:fullPath
+                           withIntermediateDirectories:YES
+                                            attributes:nil
+                                                 error:&error];
+
+    if (!success)
+    {
+        NSLog(@"Failed to create directory: %@", [error localizedDescription]);
+    }
+    return TRUE;
+}
+
+// -------------------------------------------------------------------------------------------
+
 +(NSInteger) getNumberFromString:(NSString *)input
 {
     NSInteger result = 0;

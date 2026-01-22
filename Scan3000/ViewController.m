@@ -10,6 +10,7 @@
 #import "SerialManager.h"
 #import "AppDelegate.h"
 #import "CameraCapture.h"
+#import "Utilities.h"
 
 // ------------------------------------------------------------------------------------------------
 
@@ -32,6 +33,7 @@
     [super viewDidLoad];
 
     _scanThreadRunning = false;
+    self.previewView.wantsLayer = YES;      // allow camera preview
     
     AppDelegate *appDelegate = (AppDelegate *)NSApp.delegate;
     self.serialManager = appDelegate.serialManager;
@@ -42,13 +44,45 @@
         name:SerialDidReceiveLineNotification
         object:nil];
 
+    [[NSNotificationCenter defaultCenter]
+        addObserver:self
+           selector:@selector(appWillTerminate:)
+               name:NSApplicationWillTerminateNotification
+             object:nil];
+    
     [self setLEDState:LEDStateOff imgName:_commsLED];
     [self setLEDState:LEDStateRed imgName:_cmdLED];
+
+    if ([Utilities createPathIfNotExist:self.appSettings.imagePath] == FALSE)
+        [self appendOutput:[NSString stringWithFormat:@"\n** Warning **\nImage path could not be created [%@]\n", self.appSettings.imagePath]];
 
     // TODO : only do this if the SerialManager has opened the serial port successfully
     //[self setLEDState:LEDStateGreen imgName:_commsLED];
     [self appendOutput:@"Monitoring USB input...\n\n"];
+
+    // initialise and turn on camera so we can run a preview screen.
+    self.camera = [[CameraCapture alloc] init];
+    [self.camera startSession];   // however you start it
+    [self.camera attachPreviewToView:self.previewView];
  }
+
+// ------------------------------------------------------------------------------------------------
+
+- (void)viewDidLayout
+{
+    [super viewDidLayout];
+
+    self.camera.previewLayer.frame = self.previewView.bounds;
+}
+
+// ------------------------------------------------------------------------------------------------
+
+- (void)appWillTerminate:(NSNotification *)note
+{
+    [self.camera stopSession];
+    
+    // TODO : also shut down USB thread and command processing threads
+}
 
 // ------------------------------------------------------------------------------------------------
 
@@ -213,7 +247,7 @@
 
 - (void)photoCapture
 {
-    self.camera = [[CameraCapture alloc] init];
+//    self.camera = [[CameraCapture alloc] init];
 
     [self.camera capturePhotoWithCompletion:^(NSData *imageData) {
         if (imageData)
@@ -237,8 +271,8 @@
             [self appendOutput:[NSString stringWithFormat:@"Saved photo to: %@\n", expandedPath]];
         }
 
-        // Optional: release after capture
-        self.camera = nil;
+        // Optional: release after capture - I've disabled this to allow me a continuous camera preview
+        //self.camera = nil;
     }];
 
 }

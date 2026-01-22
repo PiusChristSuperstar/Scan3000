@@ -17,6 +17,8 @@
 
 +(NSString *) convertCFTypeRefToNSString:(CFTypeRef)cfType;
 
++(BOOL)createPathIfNotExist:(NSString *)fullPath;
+
 +(NSInteger) getNumberFromString:(NSString *)input;
 
 +(char *) logString:(char *)str;

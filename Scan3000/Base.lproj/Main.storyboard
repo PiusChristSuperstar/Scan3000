@@ -707,11 +707,11 @@
             <objects>
                 <viewController id="XfG-lQ-9wD" customClass="ViewController" sceneMemberID="viewController">
                     <view key="view" id="m2S-Jp-Qdl">
-                        <rect key="frame" x="0.0" y="0.0" width="800" height="500"/>
+                        <rect key="frame" x="0.0" y="0.0" width="1218" height="500"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
                             <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="4Cx-O6-YxP">
-                                <rect key="frame" x="666" y="465" width="121" height="32"/>
+                                <rect key="frame" x="1084" y="465" width="121" height="32"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                                 <buttonCell key="cell" type="push" title="Show Settings" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="5mI-L4-zWV">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -733,19 +733,19 @@
                                 </connections>
                             </button>
                             <scrollView fixedFrame="YES" borderType="none" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" translatesAutoresizingMaskIntoConstraints="NO" id="yXB-Jp-Cwf">
-                                <rect key="frame" x="0.0" y="0.0" width="800" height="432"/>
+                                <rect key="frame" x="8" y="0.0" width="667" height="432"/>
                                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 <clipView key="contentView" drawsBackground="NO" id="AfF-67-Nxd">
-                                    <rect key="frame" x="0.0" y="0.0" width="785" height="432"/>
+                                    <rect key="frame" x="0.0" y="0.0" width="652" height="432"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
                                         <textView wantsLayer="YES" importsGraphics="NO" richText="NO" verticallyResizable="YES" smartInsertDelete="YES" id="eU7-18-FLQ">
-                                            <rect key="frame" x="0.0" y="0.0" width="785" height="432"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="652" height="432"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
-                                            <size key="minSize" width="785" height="432"/>
-                                            <size key="maxSize" width="800" height="10000000"/>
+                                            <size key="minSize" width="652" height="432"/>
+                                            <size key="maxSize" width="1094" height="10000000"/>
                                         </textView>
                                     </subviews>
                                 </clipView>
@@ -754,7 +754,7 @@
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
                                 <scroller key="verticalScroller" verticalHuggingPriority="750" horizontal="NO" id="mzT-EL-KcV">
-                                    <rect key="frame" x="785" y="0.0" width="15" height="432"/>
+                                    <rect key="frame" x="652" y="0.0" width="15" height="432"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
                             </scrollView>
@@ -792,7 +792,7 @@
                                 </buttonCell>
                             </button>
                             <imageView identifier="ledImageView" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="d3q-lT-Nya" userLabel="ledComms">
-                                <rect key="frame" x="502" y="470" width="24" height="24"/>
+                                <rect key="frame" x="920" y="470" width="24" height="24"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                                 <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="LED_Grey" id="sBk-f2-e86"/>
                                 <connections>
@@ -800,7 +800,7 @@
                                 </connections>
                             </imageView>
                             <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="1cM-2Q-nWu">
-                                <rect key="frame" x="525" y="474" width="80" height="16"/>
+                                <rect key="frame" x="943" y="474" width="80" height="16"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="USB Comms" id="dt3-XP-K9F">
                                     <font key="font" metaFont="system"/>
@@ -809,7 +809,7 @@
                                 </textFieldCell>
                             </textField>
                             <imageView identifier="ledImageView" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="8fJ-h1-cqO" userLabel="ledResponse">
-                                <rect key="frame" x="502" y="446" width="24" height="24"/>
+                                <rect key="frame" x="920" y="446" width="24" height="24"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                                 <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="LED_Grey" id="Xak-It-mm4"/>
                                 <connections>
@@ -817,7 +817,7 @@
                                 </connections>
                             </imageView>
                             <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="2tm-i9-0Sd">
-                                <rect key="frame" x="525" y="450" width="64" height="16"/>
+                                <rect key="frame" x="943" y="450" width="64" height="16"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="Response" id="EUr-Fy-uDH">
                                     <font key="font" metaFont="system"/>
@@ -836,6 +836,16 @@
                                     <action selector="startScanClicked:" target="XfG-lQ-9wD" id="hXR-eR-Sgr"/>
                                 </connections>
                             </button>
+                            <customView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="0ZC-zG-IEI">
+                                <rect key="frame" x="692" y="94" width="512" height="338"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                                <subviews>
+                                    <customView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="AQq-1h-G4c">
+                                        <rect key="frame" x="0.0" y="0.0" width="512" height="338"/>
+                                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                                    </customView>
+                                </subviews>
+                            </customView>
                         </subviews>
                     </view>
                     <connections>
@@ -847,11 +857,12 @@
                         <outlet property="cmdLED" destination="8fJ-h1-cqO" id="mbs-7o-IcT"/>
                         <outlet property="commsLED" destination="d3q-lT-Nya" id="ef2-Iu-7BM"/>
                         <outlet property="outputTextView" destination="eU7-18-FLQ" id="hzB-8f-qdq"/>
+                        <outlet property="previewView" destination="AQq-1h-G4c" id="zgu-ZC-idq"/>
                     </connections>
                 </viewController>
                 <customObject id="rPt-NT-nkU" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="6" y="687"/>
+            <point key="canvasLocation" x="215" y="687"/>
         </scene>
     </scenes>
     <resources>

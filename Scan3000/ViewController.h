@@ -14,6 +14,7 @@
 @interface ViewController : NSViewController
 
 @property (weak) IBOutlet NSTextView *outputTextView;
+@property (weak) IBOutlet NSView *previewView;
 @property (weak) IBOutlet NSImageView *commsLED;
 @property (weak) IBOutlet NSImageView *cmdLED;
 
