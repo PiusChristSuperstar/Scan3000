@@ -22,6 +22,7 @@ extern NSString * const SerialLineKey;
 @property (nonatomic, strong) SerialBuffer *receiveBuffer;      // unprocessed but complete text lines received via USB
 @property (strong) dispatch_semaphore_t receiveSemaphore;
 @property (atomic, assign) BOOL responseThreadRunning;
+@property (atomic, assign) BOOL usbReadThreadRunning;
 
 // these are flags set when we've received corresponding responses from the scanner. Once each response has been
 // handled, we clear it

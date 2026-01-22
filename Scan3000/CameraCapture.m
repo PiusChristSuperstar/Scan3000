@@ -64,8 +64,8 @@ didFinishProcessingPhoto:(AVCapturePhoto *)photo
         return; // already running or configured
     }
 
+    // 1️⃣ Discover camera
     NSArray<AVCaptureDeviceType> *deviceTypes;
-
     if (@available(macOS 14.0, *))
     {
         deviceTypes = @[
@@ -88,18 +88,7 @@ didFinishProcessingPhoto:(AVCapturePhoto *)photo
             discoverySessionWithDeviceTypes:deviceTypes
             mediaType:AVMediaTypeVideo
             position:AVCaptureDevicePositionUnspecified];
-    /*
-    // 1️⃣ Discover camera
-    AVCaptureDeviceDiscoverySession *discovery =
-        [AVCaptureDeviceDiscoverySession
-            discoverySessionWithDeviceTypes:@[
-                AVCaptureDeviceTypeExternalUnknown,
-                AVCaptureDeviceTypeBuiltInWideAngleCamera,
-                AVCaptureDeviceTypeContinuityCamera
-            ]
-            mediaType:AVMediaTypeVideo
-            position:AVCaptureDevicePositionUnspecified];
-*/
+
     AVCaptureDevice *camera = discovery.devices.firstObject;
     if (!camera)
     {

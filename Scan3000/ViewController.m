@@ -79,9 +79,10 @@
 
 - (void)appWillTerminate:(NSNotification *)note
 {
-    [self.camera stopSession];
+    // close the threads that may still be running.
+    self.scanThreadRunning = YES;
     
-    // TODO : also shut down USB thread and command processing threads
+    [self.camera stopSession];
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -196,7 +197,6 @@
 
 - (IBAction)exitClicked:(id)sender
 {
-//    close(self.usb);
     [NSApp terminate:nil];
 }
 
@@ -247,8 +247,6 @@
 
 - (void)photoCapture
 {
-//    self.camera = [[CameraCapture alloc] init];
-
     [self.camera capturePhotoWithCompletion:^(NSData *imageData) {
         if (imageData)
         {
@@ -270,9 +268,6 @@
             NSLog(@"Saved photo to %@", expandedPath);
             [self appendOutput:[NSString stringWithFormat:@"Saved photo to: %@\n", expandedPath]];
         }
-
-        // Optional: release after capture - I've disabled this to allow me a continuous camera preview
-        //self.camera = nil;
     }];
 
 }
@@ -327,11 +322,20 @@
             }
             else
             {
-                usleep(500000);    // half a second pause. TODO: Remove this again! This is just to test the enable/disable button feature
+                usleep(500000);    // half a second pause. TODO: This doesn't seem an ideal solution, but without it this thread uses lots of CPU.
                 
+                /*
+                 - The projector has been given an instruction to move to the next cell. So the procedure from here is as follows (not everything has been fully implemented yet)
+                 - 1. We wait until we've received an "AtCell" response from the projector (or a timeout)
+                 - 2. Run a photo capture and trigger a display of that photo on the screen
+                 - 3. Once capture is done, send a "NextCell" command to start the projector again
+                 - 4. Also deduct from the loop counter so we can halt when the required scans have been done.
+                 - Make sure none of the above block the thread for too long. We want to be able to have the user click on "Stop" and process this.
+                */
+
                 @synchronized(self.serialManager)
                 {
-                    // TODO : obviously remove the logging messages again and instead launch the photo capture
+                    // TODO : The logging message can be removed once I'm happy with how it all runs
                     if ((self.serialManager.scannerAtCell) && (self.serialManager.scannerOk))
                     {
                         dispatch_async(dispatch_get_main_queue(), ^{
@@ -349,18 +353,6 @@
                     // TODO: also handle scannerTimeout and scannerError
                 }
             }
-            
-            /*
-             TODO:
-             - 1. wait until we've received an "AtCell" projector response (or a timeout)
-             - 2. Run a photo capture (and trigger a display of that photo on the screen)
-             - 3. Once capture is done, send a "NextCell" command
-             - 4. Also deduct from the loop counter so we can halt when the required scans have been done.
-             - Make sure none of the above block the thread for too long. We want to be able to have the user click on "Stop" and process this.
-
-             - Do we need the below? :
-                    dispatch_semaphore_wait(self.receiveSemaphore, DISPATCH_TIME_FOREVER);
-            */
         }
         
         // Scanning has ended. Re-enable the buttons again.
@@ -371,62 +363,6 @@
     });
     
 }
-
-// ------------------------------------------------------------------------------------------------
-/*
-- (void)startUSBReaderThread
-{
-    
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        char readBuf[256];
-
-        while (1)
-        {
-            ssize_t bytesRead = read(self.usb, readBuf, sizeof(readBuf));
-            if (bytesRead > 0)
-            {
-                @synchronized(self.rawBuffer)
-                {
-                    [self.rawBuffer appendBytes:readBuf length:bytesRead];
-
-                    while (1)
-                    {
-                        const char *bytes = self.rawBuffer.bytes;
-                        NSUInteger len = self.rawBuffer.length;
-
-                        char *newline = memchr(bytes, '\n', len);
-                        if (!newline) break;
-
-                        NSUInteger lineLen = newline - bytes;
-
-                        NSData *lineData = [NSData dataWithBytes:bytes length:lineLen];
-                        NSString *line = [[NSString alloc] initWithData:lineData                                                       encoding:NSUTF8StringEncoding];
-
-                        if (line)
-                        {
-                            @synchronized(self.receiveBuffer)
-                            {
-                                [self.receiveBuffer enqueue:line];
-                                
-                                // let the receive handler know that we've received something it may want to process
-                                dispatch_semaphore_signal(self.receiveSemaphore);
-                            }
-
-                            dispatch_async(dispatch_get_main_queue(), ^{
-                                [self appendOutput:[NSString stringWithFormat:@"RX: %@\n", line]];
-                            });
-                        }
-
-                        [self.rawBuffer replaceBytesInRange:NSMakeRange(0, lineLen + 1)
-                                                 withBytes:NULL
-                                                    length:0];
-                    }
-                }
-            }
-        }
-    });
-}
-*/
 
 // ------------------------------------------------------------------------------------------------
 

@@ -76,9 +76,23 @@ NSString * const SerialLineKey = @"SerialLineKey";
     });
 }
 
+// -------------------------------------------------------------------------------------------
+
 - (void)stop
 {
-    // signal semaphores, stop threads cleanly
+    [self stopResponseReaderThread];
+
+    [self stopUsbReadThread];
+    
+    // close the serial port again
+    int flags = fcntl(self.usb, F_GETFL);
+    flags &= ~O_NONBLOCK;
+    fcntl(self.usb, F_SETFL, flags);      // flush the buffer, reset terminal settings and re-set blocking mode before closing
+    if (self.usb != -1)
+    {
+        close(self.usb);
+        self.usb = -1; // Reset to prevent double-closing
+    }
 }
 
 // -------------------------------------------------------------------------------------------
@@ -139,10 +153,12 @@ NSString * const SerialLineKey = @"SerialLineKey";
 
 - (void)startUSBReaderThread
 {
+    self.usbReadThreadRunning = TRUE;
+    
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         char readBuf[256];
         
-        while (1)
+        while (self.usbReadThreadRunning)
         {
             ssize_t bytesRead = read(self.usb, readBuf, sizeof(readBuf));
             if (bytesRead > 0)
@@ -189,8 +205,20 @@ NSString * const SerialLineKey = @"SerialLineKey";
                     }
                 }
             }
+            
+            // have we received a shut down signal?
+            if (!self.usbReadThreadRunning)
+                break;
         }
     });
+}
+
+// ------------------------------------------------------------------------------------------------
+
+- (void) stopUsbReadThread
+{
+    // Tell the thread to exit
+    self.usbReadThreadRunning = NO;
 }
 
 // ------------------------------------------------------------------------------------------------
