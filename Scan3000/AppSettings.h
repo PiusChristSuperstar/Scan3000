@@ -20,5 +20,5 @@
 @property (nonatomic, assign) NSInteger capturePause;   // How long to pause (in seconds) after sending Arduino instructions. This gives the
                                                         // Arduino time to process what has been received. But I'm also using this during development
                                                         // to simulate a delay during the photo capture
-
+@property (nonatomic, assign) NSSize cameraResolution;  // desired height and width resolution of the camera
 @end

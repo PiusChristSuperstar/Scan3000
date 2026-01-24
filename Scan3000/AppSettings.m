@@ -30,7 +30,8 @@
         _logFileName = @"ScanBrain.log";
         _imagePath = @"~/ScanBrain/Images";
         _capturePause = 2;
-        
+        _cameraResolution.width = 1920;
+        _cameraResolution.height = 1080;
         [self readSettingsFromFile];
     }
     return self;
@@ -99,6 +100,29 @@
                 else if ([settingName isEqualToString:@"IMAGE_LOCATION"])
                 {
                     _imagePath = settingValue;
+                }
+                else if ([settingName isEqualToString:@"CAM_RESOLUTION"])
+                {
+                    // decipher the string
+                    NSScanner *scanner = [NSScanner scannerWithString:settingValue];
+
+                    // Optional: Define which characters the scanner should ignore (defaults to whitespace/newlines)
+                    [scanner setCharactersToBeSkipped:[NSCharacterSet whitespaceCharacterSet]];
+
+                    // default values
+                    int width = 1920;
+                    int height = 1080;
+
+                    // 1. Scan the first number
+                    [scanner scanInt:&width];
+
+                    // 2. Skip the 'x' character
+                    [scanner scanString:@"x" intoString:NULL];
+
+                    // 3. Scan the second number
+                    [scanner scanInt:&height];
+                    _cameraResolution.width = width;
+                    _cameraResolution.height = height;
                 }
             }
             else

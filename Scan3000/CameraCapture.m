@@ -57,7 +57,7 @@ didFinishProcessingPhoto:(AVCapturePhoto *)photo
 
 // ------------------------------------------------------------------------------------------------
 
-- (void)startSession
+- (void)startSession:(NSSize)camResolution
 {
     if (self.session)
     {
@@ -89,17 +89,29 @@ didFinishProcessingPhoto:(AVCapturePhoto *)photo
             mediaType:AVMediaTypeVideo
             position:AVCaptureDevicePositionUnspecified];
 
-    AVCaptureDevice *camera = discovery.devices.firstObject;
-    if (!camera)
+    _videoDevice = discovery.devices.firstObject;
+    if (!_videoDevice)
     {
         NSLog(@"❌ No camera device found");
         return;
     }
 
+    // Log what the camera supports
+    [self checkAvailableResolution];
+    if ([self setCamResolution:camResolution.width height:camResolution.height] == FALSE)
+    {
+        // We don't want to crash out here. Just revert to default settings.
+        NSLog(@"❌ Camera does not support: %d x %d", (int)camResolution.width, (int)camResolution.height);
+    }
+    else
+    {
+        NSLog(@"Resolution set to: %d x %d", (int)camResolution.width, (int)camResolution.height);
+    }
+    
     // 2️⃣ Create input
     NSError *inputError = nil;
     AVCaptureDeviceInput *input =
-        [AVCaptureDeviceInput deviceInputWithDevice:camera error:&inputError];
+        [AVCaptureDeviceInput deviceInputWithDevice:_videoDevice error:&inputError];
 
     if (!input)
     {
@@ -184,6 +196,58 @@ didFinishProcessingPhoto:(AVCapturePhoto *)photo
 - (void)dealloc
 {
     NSLog(@"CameraCapture deallocated");
+}
+
+// ------------------------------------------------------------------------------------------------
+
+- (void)checkAvailableResolution
+{
+    AVCaptureDevice *device = self.videoDevice;
+    
+    for (AVCaptureDeviceFormat *format in device.formats)
+    {
+        CMVideoDimensions dims =
+        CMVideoFormatDescriptionGetDimensions(format.formatDescription);
+        
+        NSLog(@"Format: %d x %d", dims.width, dims.height);
+        
+        for (AVFrameRateRange *range in format.videoSupportedFrameRateRanges)
+        {
+            NSLog(@"  FPS: %.2f - %.2f",
+                  range.minFrameRate,
+                  range.maxFrameRate);
+        }
+    }
+}
+
+// ------------------------------------------------------------------------------------------------
+
+- (BOOL)setCamResolution:(int)width height:(int)height
+{
+    AVCaptureDevice *device = self.videoDevice;
+
+    for (AVCaptureDeviceFormat *format in device.formats)
+    {
+        CMVideoDimensions dims =
+            CMVideoFormatDescriptionGetDimensions(format.formatDescription);
+
+        if (dims.width == width && dims.height == height)
+        {
+            NSError *error = nil;
+            if ([device lockForConfiguration:&error])
+            {
+                device.activeFormat = format;
+                [device unlockForConfiguration];
+                return YES;
+            }
+            else
+            {
+                NSLog(@"Error locking device: %@", error);
+                return NO;
+            }
+        }
+    }
+    return NO;
 }
 
 // ------------------------------------------------------------------------------------------------

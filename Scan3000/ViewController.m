@@ -72,7 +72,7 @@
 
     // initialise and turn on camera so we can run a preview screen.
     self.camera = [[CameraCapture alloc] init];
-    [self.camera startSession];   // however you start it
+    [self.camera startSession:_appSettings.cameraResolution];   // start camera preview session
     [self.camera attachPreviewToView:self.previewView];
  }
 
@@ -190,7 +190,8 @@
     [self appendOutput:[NSString stringWithFormat:@"\n\tCapture Pause\t\t\t: %li", _appSettings.capturePause]];
     [self appendOutput:[NSString stringWithFormat:@"\n\tUSB Port\t\t\t\t: %s", [_appSettings.usbPortName UTF8String]]];
     [self appendOutput:[NSString stringWithFormat:@"\n\tLog File\t\t\t\t: %s", [_appSettings.logFileName UTF8String]]];
-    [self appendOutput:[NSString stringWithFormat:@"\n\tCaptured Image Location\t: %s\n\n", [_appSettings.imagePath UTF8String]]];
+    [self appendOutput:[NSString stringWithFormat:@"\n\tCaptured Image Location\t: %s", [_appSettings.imagePath UTF8String]]];
+    [self appendOutput:[NSString stringWithFormat:@"\n\tCamera Resolution\t\t: %d x %d\n\n", (int)_appSettings.cameraResolution.width, (int)_appSettings.cameraResolution.height]];
     // TODO: maybe add an option to re-load settings file?
 
     // Also display the current scanner state flags
@@ -260,9 +261,13 @@
 
 - (IBAction)optoClicked:(id)sender
 {
-    // TODO: uncomment this again. I'm just quickly hijacking this function to test photo capture
-    //[self sendCommand:@CMD_TESTOPTO];
-    
+    [self sendCommand:@CMD_TESTOPTO];
+}
+
+// ------------------------------------------------------------------------------------------------
+
+- (IBAction)takePhotoClicked:(id)sender
+{
     [self photoCapture];
 }
 

@@ -16,13 +16,15 @@
 @property (nonatomic, strong) AVCaptureSession *session;
 @property (nonatomic, strong) AVCapturePhotoOutput *photoOutput;
 @property (nonatomic, strong) AVCaptureVideoPreviewLayer *previewLayer;
+@property (nonatomic, strong, readonly) AVCaptureDevice *videoDevice;
 
 @property (nonatomic, copy) void (^completion)(NSData *);
 
-- (void)startSession;
+- (void)startSession:(NSSize)camResolution;
 - (void)stopSession;
 - (void)capturePhotoWithCompletion:(void (^)(NSData *imageData))completion;
 - (void)attachPreviewToView:(NSView *)view;
+- (BOOL)setCamResolution:(int)width height:(int)height;
 
 @end
 

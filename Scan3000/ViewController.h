@@ -27,6 +27,7 @@
 @property (weak) IBOutlet NSButton *btnCheckSensor;
 @property (weak) IBOutlet NSButton *btnNextCell;
 @property (weak) IBOutlet NSButton *btnStartScan;
+@property (weak) IBOutlet NSButton *btnTakePhoto;               // Take a photo - for testing and adjusting camera
 
 - (IBAction)showSettingsClicked:(id)sender;
 - (IBAction)nextCellClicked:(id)sender;
@@ -34,5 +35,6 @@
 - (IBAction)pingClicked:(id)sender;
 - (IBAction)optoClicked:(id)sender;
 - (IBAction)rewindClicked:(id)sender;
+- (IBAction)takePhotoClicked:(id)sender;
 @end
 

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="23504" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" initialViewController="B8D-0N-5wS">
+<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="23727" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" initialViewController="B8D-0N-5wS">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="23504"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="23727"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
@@ -770,9 +770,9 @@
                                 </connections>
                             </button>
                             <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="YNu-qz-2PM">
-                                <rect key="frame" x="242" y="440" width="119" height="32"/>
+                                <rect key="frame" x="241" y="440" width="112" height="32"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                <buttonCell key="cell" type="push" title="Check Sensor" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="DQv-ql-op5">
+                                <buttonCell key="cell" type="push" title="Sensor State" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="DQv-ql-op5">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                     <font key="font" metaFont="system"/>
                                     <connections>
@@ -846,6 +846,28 @@
                                     </customView>
                                 </subviews>
                             </customView>
+                            <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="5fl-FD-hcL">
+                                <rect key="frame" x="359" y="440" width="102" height="32"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                <buttonCell key="cell" type="push" title="Take Photo" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="Qhq-ir-ffU">
+                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                    <connections>
+                                        <action selector="optoClicked:" target="XfG-lQ-9wD" id="YTa-gW-wqV"/>
+                                    </connections>
+                                </buttonCell>
+                            </button>
+                            <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="q5I-7z-piU">
+                                <rect key="frame" x="359" y="440" width="102" height="32"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                <buttonCell key="cell" type="push" title="Take Photo" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="uhT-0Q-fMj">
+                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                </buttonCell>
+                                <connections>
+                                    <action selector="takePhotoClicked:" target="XfG-lQ-9wD" id="Bh2-yH-jmU"/>
+                                </connections>
+                            </button>
                         </subviews>
                     </view>
                     <connections>
@@ -854,6 +876,7 @@
                         <outlet property="btnPing" destination="UXi-Re-OFi" id="8QC-h6-hmv"/>
                         <outlet property="btnRewind" destination="vL5-jc-ciy" id="KK3-aS-ntk"/>
                         <outlet property="btnStartScan" destination="2dP-if-CGh" id="Qja-6a-fmB"/>
+                        <outlet property="btnTakePhoto" destination="5fl-FD-hcL" id="yTg-hK-1Hi"/>
                         <outlet property="cmdLED" destination="8fJ-h1-cqO" id="mbs-7o-IcT"/>
                         <outlet property="commsLED" destination="d3q-lT-Nya" id="ef2-Iu-7BM"/>
                         <outlet property="outputTextView" destination="eU7-18-FLQ" id="hzB-8f-qdq"/>
