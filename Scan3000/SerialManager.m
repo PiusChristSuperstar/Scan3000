@@ -8,8 +8,10 @@
 //
 
 #import <termios.h>
-
 #import <Foundation/Foundation.h>
+#import <IOKit/IOKitLib.h>
+#import <IOKit/serial/IOSerialKeys.h>
+
 #import "SerialManager.h"
 #import "SerialBuffer.h"
 #import "ArduinoResponse.h"
@@ -19,6 +21,30 @@ NSString * const SerialDidReceiveLineNotification = @"SerialDidReceiveLineNotifi
 NSString * const SerialLineKey = @"SerialLineKey";
 NSString * const PortChangedStateNotification = @"PortChangedStateNotification";
 NSString * const PortChangedStateKey = @"PortChangedStateKey";
+
+// -------------------------------------------------------------------------------------------
+
+/*
+ Callback method that is called when the USB port closes. E.g. the cable is being unplugged
+ or there is an error.
+ */
+static void DeviceDisconnectedCallback(void *refCon, io_iterator_t iterator)
+{
+    // Get a pointer to the instance of this serialManager
+    SerialManager *mgrInstance = (__bridge SerialManager *)refCon;
+    
+    io_object_t device;
+    // 2. You MUST iterate through the iterator to "arm" the next notification
+    while ((device = IOIteratorNext(iterator)))
+    {
+        // You can get device info here if needed, but for disconnects,
+        // we usually just release the object.
+        IOObjectRelease(device);
+    }
+    
+    // 3. Tell your instance to handle the cleanup
+    [mgrInstance handleDisconnect];
+}
 
 @implementation SerialManager
 
@@ -33,8 +59,50 @@ NSString * const PortChangedStateKey = @"PortChangedStateKey";
         self.receiveBuffer = [[SerialBuffer alloc] init];
         self.rawBuffer = [NSMutableData data];
         self.receiveSemaphore = dispatch_semaphore_create(0);   // will be flagged when we receive data from projector
+        
+        
+        // Inside your startMonitoring method:
+        IONotificationPortRef notifyPort = IONotificationPortCreate(kIOMainPortDefault);
+        CFRunLoopAddSource(CFRunLoopGetCurrent(), IONotificationPortGetRunLoopSource(notifyPort), kCFRunLoopDefaultMode);
+
+        // Create a matching dictionary for your device
+        CFMutableDictionaryRef matchingDict = IOServiceMatching(kIOSerialBSDServiceValue);
+
+        // We want to know if the port is being disconnected while we're using it. So register to receive port disconnection notifications
+        io_iterator_t portIterator;
+        kern_return_t kr = IOServiceAddMatchingNotification(notifyPort, kIOTerminatedNotification, matchingDict,
+                                         DeviceDisconnectedCallback, (__bridge void *)(self), &portIterator);
+        
+        // EXHAUST the iterator to "arm" the notification
+        if (kr == KERN_SUCCESS)
+        {
+            io_object_t device;
+            while ((device = IOIteratorNext(portIterator)))
+            {
+                // We release each object found to avoid memory leaks
+                IOObjectRelease(device);
+            }
+        }
     }
     return self;
+}
+
+// -------------------------------------------------------------------------------------------
+
+- (void)handleDisconnect
+{
+    if (self.usb != -1)
+    {
+        close(self.usb);
+        self.usb = -1;
+    }
+
+    // stop the reader threads
+    [self stopResponseReaderThread];
+    [self stopUsbReadThread];
+    
+    // Post the changed port state to the UI
+    [self notifyCommsState:self.isPortOpen];
 }
 
 // -------------------------------------------------------------------------------------------
@@ -48,6 +116,12 @@ NSString * const PortChangedStateKey = @"PortChangedStateKey";
 
 - (void)start
 {
+    if ([self isPortOpen] == YES)
+    {
+        [self notifyView: @"Port is already open"];
+        return;
+    }
+    
     // clear all scanner state flags
     self.scannerIsReady = false;
     self.scannerAtCell = false;
@@ -127,6 +201,9 @@ NSString * const PortChangedStateKey = @"PortChangedStateKey";
     self.scannerTimeout = false;
     self.scannerError = false;
     
+    if ([self isPortOpen] == NO)
+        return @"USB port is no longer open\n";
+
     ssize_t numBytes = write(self.usb, [cmd UTF8String], cmd.length);
     if (numBytes == -1)
     {
@@ -158,6 +235,22 @@ NSString * const PortChangedStateKey = @"PortChangedStateKey";
     
     tcsetattr(fd, TCSANOW, &options);
     return fd;
+}
+
+// ------------------------------------------------------------------------------------------------
+
+- (BOOL)isPortStillValid
+{
+    if (self.usb < 0)
+        return NO;
+    
+    // F_GETFL is the cheapest call to check if the kernel still "owns" this fd
+    int result = fcntl(self.usb, F_GETFL);
+    if ((result == -1) && (errno == EBADF))
+    {
+        return NO; // Hardware was disconnected or port was closed
+    }
+    return YES;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -274,33 +367,31 @@ NSString * const PortChangedStateKey = @"PortChangedStateKey";
             if (!dataItem)
                 continue;
             
-            //dispatch_async(dispatch_get_main_queue(), ^{
-                switch (dataItem.command)
-                {
-                    case cmdOk:
-                        self.scannerOk = true;
-                        break;
-                        
-                    case cmdErr:
-                        self.scannerTimeout = true;
-                        self.scannerError = true;
-                        break;
-                        
-                    case cmdReady:
-                        self.scannerIsReady = true;
-                        break;
-                        
-                    case cmdAttCell:
-                        self.scannerAtCell = true;
-                        break;
-                        
-                    case cmdLog:
-                    case cmdUnknown:
-                        // For the time being, we don't handle these since we don't need them. However in
-                        // the future we should probably at least log them.
-                        break;
-                }
-           // });
+            switch (dataItem.command)
+            {
+                case cmdOk:
+                    self.scannerOk = true;
+                    break;
+                    
+                case cmdErr:
+                    self.scannerTimeout = true;
+                    self.scannerError = true;
+                    break;
+                    
+                case cmdReady:
+                    self.scannerIsReady = true;
+                    break;
+                    
+                case cmdAttCell:
+                    self.scannerAtCell = true;
+                    break;
+                    
+                case cmdLog:
+                case cmdUnknown:
+                    // For the time being, we don't handle these since we don't need them. However in
+                    // the future we should probably at least log them.
+                    break;
+            }
         }
     });
 }

@@ -862,11 +862,42 @@
                                     <action selector="takePhotoClicked:" target="XfG-lQ-9wD" id="Bh2-yH-jmU"/>
                                 </connections>
                             </button>
+                            <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="bZc-IM-zTR">
+                                <rect key="frame" x="1079" y="433" width="126" height="32"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                                <buttonCell key="cell" type="push" title="Open USB Port" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="zTg-fl-TKn">
+                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                </buttonCell>
+                            </button>
+                            <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="xeV-Vc-imy">
+                                <rect key="frame" x="1079" y="433" width="126" height="32"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                                <buttonCell key="cell" type="push" title="Open USB Port" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="g0r-sl-rbu">
+                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                </buttonCell>
+                                <connections>
+                                    <action selector="openPortClicked:" target="XfG-lQ-9wD" id="mlQ-HB-MNM"/>
+                                </connections>
+                            </button>
+                            <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="zOB-2x-hHu">
+                                <rect key="frame" x="1079" y="433" width="126" height="32"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                                <buttonCell key="cell" type="push" title="Open USB Port" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="pEv-xk-ATM">
+                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                </buttonCell>
+                                <connections>
+                                    <action selector="openPortClicked:" target="XfG-lQ-9wD" id="K9G-27-wvU"/>
+                                </connections>
+                            </button>
                         </subviews>
                     </view>
                     <connections>
                         <outlet property="btnCheckSensor" destination="YNu-qz-2PM" id="7FT-Xj-fem"/>
                         <outlet property="btnNextCell" destination="nKM-kP-Ter" id="fts-n2-hGi"/>
+                        <outlet property="btnOpenPort" destination="zOB-2x-hHu" id="NpA-Tc-jKq"/>
                         <outlet property="btnPing" destination="UXi-Re-OFi" id="8QC-h6-hmv"/>
                         <outlet property="btnRewind" destination="vL5-jc-ciy" id="KK3-aS-ntk"/>
                         <outlet property="btnStartScan" destination="2dP-if-CGh" id="Qja-6a-fmB"/>

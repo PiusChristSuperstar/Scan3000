@@ -77,6 +77,9 @@
     self.camera = [[CameraCapture alloc] init];
     [self.camera startSession:_appSettings.cameraResolution];   // start camera preview session
     [self.camera attachPreviewToView:self.previewView];
+    
+    NSLog(@"Button pointer: %@", _btnOpenPort);
+    _btnOpenPort.enabled = false;   // will be enabled when we receive a disconnect notification
  }
 
 // ------------------------------------------------------------------------------------------------
@@ -111,6 +114,8 @@
 
 - (void)serialStatusChange:(NSNotification *)note
 {
+    // TODO : add an "Open port" button and enable/disable this based on the port status we receive.
+    
     NSDictionary *userInfo = note.userInfo;
     // Extract the NSNumber and get its boolean value
     BOOL isOpen = [userInfo[PortChangedStateKey] boolValue];
@@ -121,6 +126,7 @@
         
         [self appendOutput:@"Monitoring USB input...\n\n"];
         NSLog(@"The port is now open.");
+        _btnOpenPort.enabled = false;
     }
     else
     {
@@ -128,6 +134,7 @@
 
         [self appendOutput:@"USB port has been closed\n"];
         NSLog(@"The port is now closed.");
+        _btnOpenPort.enabled = true;
     }
 }
 
@@ -271,6 +278,13 @@
 - (IBAction)takePhotoClicked:(id)sender
 {
     [self photoCapture];
+}
+
+// ------------------------------------------------------------------------------------------------
+
+- (IBAction)openPortClicked:(id)sender
+{
+    [_serialManager start];
 }
 
 // ------------------------------------------------------------------------------------------------

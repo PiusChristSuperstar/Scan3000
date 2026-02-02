@@ -38,6 +38,7 @@ extern NSString * const PortChangedStateKey;
 - (void)stop;
 - (void)notifyView:(NSString *)displayText;
 - (void)notifyCommsState:(BOOL)portIsOpen;
+- (void)handleDisconnect;
 
 - (NSString *)sendCommand:(NSString *)cmd;
 

@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		5762AA4E2F10CBED009D23B2 /* settings.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 5762AA4D2F10CBED009D23B2 /* settings.xcconfig */; };
 		57CD47252F1E3DA7001A5DCC /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 57CD47242F1E3DA7001A5DCC /* AVFoundation.framework */; };
+		57FAE5B32F305A0700F59DD5 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 57FAE5B22F305A0700F59DD5 /* IOKit.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -34,6 +35,7 @@
 		5762AA342F10CAB7009D23B2 /* Scan3000UITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Scan3000UITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		5762AA4D2F10CBED009D23B2 /* settings.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = settings.xcconfig; sourceTree = "<group>"; };
 		57CD47242F1E3DA7001A5DCC /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
+		57FAE5B22F305A0700F59DD5 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -60,6 +62,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				57CD47252F1E3DA7001A5DCC /* AVFoundation.framework in Frameworks */,
+				57FAE5B32F305A0700F59DD5 /* IOKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -105,6 +108,7 @@
 		57CD47232F1E3DA6001A5DCC /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				57FAE5B22F305A0700F59DD5 /* IOKit.framework */,
 				57CD47242F1E3DA7001A5DCC /* AVFoundation.framework */,
 			);
 			name = Frameworks;
