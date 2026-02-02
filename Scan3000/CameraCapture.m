@@ -2,6 +2,11 @@
 //  CameraCapture.m
 //  Scan3000
 //
+//  Handles standard webcam streaming and photo capture. I'm building this class mainly to allow me to
+//  test functionality of the app. Actual capture will likely be taken through a new interface to a
+//  higher resolution Olympus DSLR camera. But I'll leave this class in and we'll be able to select it
+//  for usage through settings in the xcconfig file.
+//
 //  Created by Pius Ott on 19/1/2026.
 //
 
@@ -9,6 +14,11 @@
 #import <AppKit/AppKit.h>
 
 @import AVFoundation;
+
+
+// Keys for notifications we're sending out to observers
+NSString * const CameraInfoNotification = @"CameraInfoNotification";
+NSString * const CameraInfoKey = @"CameraInfoKey";
 
 @interface CameraCapture ()
 @end
@@ -35,10 +45,16 @@
 didFinishProcessingPhoto:(AVCapturePhoto *)photo
                error:(NSError *)error
 {
+    NSString *errorMsg;
     if (error)
     {
-        NSLog(@"❌ Photo capture error: %@", error);
-        if (self.completion) self.completion(nil);
+        errorMsg = [NSString stringWithFormat:@"❌ Photo capture error: %@", error];
+        NSLog(@"%@", errorMsg);
+        [self notifyView:errorMsg];
+        
+        if (self.completion)
+            self.completion(nil);
+        
         return;
     }
 
@@ -46,7 +62,9 @@ didFinishProcessingPhoto:(AVCapturePhoto *)photo
 
     if (!imageData)
     {
-        NSLog(@"❌ fileDataRepresentation returned nil");
+        errorMsg = @"❌ fileDataRepresentation returned nil";
+        NSLog(@"%@", errorMsg);
+        [self notifyView:errorMsg];
     }
 
     if (self.completion)
@@ -65,23 +83,11 @@ didFinishProcessingPhoto:(AVCapturePhoto *)photo
     }
 
     // 1️⃣ Discover camera
-    NSArray<AVCaptureDeviceType> *deviceTypes;
-    if (@available(macOS 14.0, *))
-    {
-        deviceTypes = @[
+    NSArray<AVCaptureDeviceType> *deviceTypes = @[
             AVCaptureDeviceTypeBuiltInWideAngleCamera,
             AVCaptureDeviceTypeContinuityCamera,
             AVCaptureDeviceTypeExternal
         ];
-    }
-    else
-    {
-        deviceTypes = @[
-            AVCaptureDeviceTypeBuiltInWideAngleCamera,
-            AVCaptureDeviceTypeContinuityCamera,
-            AVCaptureDeviceTypeExternalUnknown
-        ];
-    }
 
     AVCaptureDeviceDiscoverySession *discovery =
         [AVCaptureDeviceDiscoverySession
@@ -89,23 +95,31 @@ didFinishProcessingPhoto:(AVCapturePhoto *)photo
             mediaType:AVMediaTypeVideo
             position:AVCaptureDevicePositionUnspecified];
 
+    NSString *errorMsg;
     _videoDevice = discovery.devices.firstObject;
     if (!_videoDevice)
     {
-        NSLog(@"❌ No camera device found");
+        errorMsg = @"❌ No camera device found";
+        NSLog(@"%@", errorMsg);
+        [self notifyView:errorMsg];
         return;
     }
 
-    // Log what the camera supports
-    [self checkAvailableResolution];
     if ([self setCamResolution:camResolution.width height:camResolution.height] == FALSE)
     {
         // We don't want to crash out here. Just revert to default settings.
-        NSLog(@"❌ Camera does not support: %d x %d", (int)camResolution.width, (int)camResolution.height);
+        errorMsg = [NSString stringWithFormat:@"❌ Camera does not support: %d x %d", (int)camResolution.width, (int)camResolution.height];
+        NSLog(@"%@", errorMsg);
+        [self notifyView:errorMsg];
+
+        [self checkAvailableResolution];    // just for info, show what resolutions are available in NSLog
     }
     else
     {
-        NSLog(@"Resolution set to: %d x %d", (int)camResolution.width, (int)camResolution.height);
+        // not really an error message...
+        errorMsg = [NSString stringWithFormat:@"Camera resolution set to: %d x %d", (int)camResolution.width, (int)camResolution.height];
+        NSLog(@"%@", errorMsg);
+        [self notifyView:errorMsg];
     }
     
     // 2️⃣ Create input
@@ -115,7 +129,9 @@ didFinishProcessingPhoto:(AVCapturePhoto *)photo
 
     if (!input)
     {
-        NSLog(@"❌ Failed to create input: %@", inputError);
+        errorMsg = [NSString stringWithFormat:@"❌ Failed to create input: %@", inputError];
+        NSLog(@"%@", errorMsg);
+        [self notifyView:errorMsg];
         return;
     }
 
@@ -132,7 +148,10 @@ didFinishProcessingPhoto:(AVCapturePhoto *)photo
     }
     else
     {
-        NSLog(@"❌ Cannot add camera input");
+        errorMsg = @"❌ Cannot add camera input";
+        NSLog(@"%@", errorMsg);
+        [self notifyView:errorMsg];
+
         [self.session commitConfiguration];
         self.session = nil;
         return;
@@ -147,7 +166,10 @@ didFinishProcessingPhoto:(AVCapturePhoto *)photo
     }
     else
     {
-        NSLog(@"❌ Cannot add photo output");
+        errorMsg = @"❌ Cannot add photo output";
+        NSLog(@"%@", errorMsg);
+        [self notifyView:errorMsg];
+        
         [self.session commitConfiguration];
         self.session = nil;
         return;
@@ -242,12 +264,28 @@ didFinishProcessingPhoto:(AVCapturePhoto *)photo
             }
             else
             {
-                NSLog(@"Error locking device: %@", error);
+                NSString *errorMsg = [NSString stringWithFormat:@"Error locking device: %@", error];
+                NSLog(@"%@", errorMsg);
+                [self notifyView:errorMsg];
+
                 return NO;
             }
         }
     }
     return NO;
+}
+
+// ------------------------------------------------------------------------------------------------
+
+// send a message to the ViewController that we want it to display
+- (void)notifyView:(NSString *)displayText
+{
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [[NSNotificationCenter defaultCenter]
+         postNotificationName:CameraInfoNotification
+         object:self
+         userInfo:@{ CameraInfoKey : displayText }];
+    });
 }
 
 // ------------------------------------------------------------------------------------------------

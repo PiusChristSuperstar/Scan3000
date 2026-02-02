@@ -39,13 +39,20 @@
     self.serialManager = appDelegate.serialManager;
     self.appSettings = appDelegate.appSettings;
 
-    // Observer that handles received text that we need to display
+    // Observer that handles received text from the serial manager that we need to display
     [[NSNotificationCenter defaultCenter]
         addObserver:self
            selector:@selector(serialDidReceiveLine:)
                name:SerialDidReceiveLineNotification
              object:nil];
 
+    // Observer that handles received text from the camera handler that we need to display
+    [[NSNotificationCenter defaultCenter]
+        addObserver:self
+           selector:@selector(cameraDidReceiveLine:)
+               name:CameraInfoNotification
+             object:nil];
+    
     // Observer that handles call to shut down the application
     [[NSNotificationCenter defaultCenter]
         addObserver:self
@@ -65,10 +72,6 @@
 
     if ([Utilities createPathIfNotExist:self.appSettings.imagePath] == FALSE)
         [self appendOutput:[NSString stringWithFormat:@"\n** Warning **\nImage path could not be created [%@]\n", self.appSettings.imagePath]];
-
-    // TODO : only do this if the SerialManager has opened the serial port successfully
-    //[self setLEDState:LEDStateGreen imgName:_commsLED];
-    [self appendOutput:@"Monitoring USB input...\n\n"];
 
     // initialise and turn on camera so we can run a preview screen.
     self.camera = [[CameraCapture alloc] init];
@@ -108,23 +111,22 @@
 
 - (void)serialStatusChange:(NSNotification *)note
 {
-    NSLog(@"Received USB Serial status change.");
-    [self appendOutput:@"Received USB Serial status change.\n"];  // display in textview
-    
     NSDictionary *userInfo = note.userInfo;
     // Extract the NSNumber and get its boolean value
     BOOL isOpen = [userInfo[PortChangedStateKey] boolValue];
-    
     
     if (isOpen)
     {
         [self setLEDState:LEDStateGreen imgName:_commsLED];
         
+        [self appendOutput:@"Monitoring USB input...\n\n"];
         NSLog(@"The port is now open.");
     }
     else
     {
         [self setLEDState:LEDStateRed imgName:_commsLED];
+
+        [self appendOutput:@"USB port has been closed\n"];
         NSLog(@"The port is now closed.");
     }
 }
@@ -146,6 +148,17 @@
     else if ([line isEqualToString:@RSP_ERR])
         [self setLEDState:LEDStateRed imgName:self->_cmdLED];
 }
+
+// ------------------------------------------------------------------------------------------------
+
+- (void)cameraDidReceiveLine:(NSNotification *)note
+{
+    NSString *line = note.userInfo[CameraInfoKey];
+    
+    [self appendOutput:[NSString stringWithFormat:@"%@\n", line]];  // display in textview
+}
+
+// ------------------------------------------------------------------------------------------------
 
 - (void)dealloc
 {
@@ -210,22 +223,11 @@
     if (_scanThreadRunning)
     {
         self.scanThreadRunning = NO;    // tell the thread to exit
-
-        // TODO: change the button label to "Start Scanning"
-        // TODO: re-enable the disabled buttons
     }
     else
     {
         [self startScanThread];
-        // TODO: Start scanning
-        // TODO: change the button label to "Stop Scanning"
     }
-    
-    
-    // TODO : Implement this. For the moment we run however many scans as are defined in appSettings.cellsToRead
-    //        Eventually we'll want to scan until either the film has ended (interrupt switch triggered) or
-    //        until the user clicks the "Stop" button (e.g. this button again while we're scanning.
-    // TODO: Also while we're scanning, disable the "Rewind", "Ping", "Check Sensor" and "Next Cell" buttons
     // TODO: We should really display the last scanned image too.
 }
 

@@ -11,6 +11,9 @@
 
 @class NSView;
 
+extern NSString * const CameraInfoNotification;
+extern NSString * const CameraInfoKey;
+
 @interface CameraCapture : NSObject <AVCapturePhotoCaptureDelegate>
 
 @property (nonatomic, strong) AVCaptureSession *session;
