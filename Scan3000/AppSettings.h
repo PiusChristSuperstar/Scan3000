@@ -21,4 +21,6 @@
                                                         // Arduino time to process what has been received. But I'm also using this during development
                                                         // to simulate a delay during the photo capture
 @property (nonatomic, assign) NSSize cameraResolution;  // desired height and width resolution of the camera
+@property (nonatomic, assign) Boolean useOlympusCam;    // if true, use the Olympus SLR camera instead of a webcam
+
 @end

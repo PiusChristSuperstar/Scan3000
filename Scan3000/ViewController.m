@@ -10,6 +10,7 @@
 #import "SerialManager.h"
 #import "AppDelegate.h"
 #import "CameraCapture.h"
+#import "OlympusCamera/OlympusCam.h"
 #import "Utilities.h"
 
 // ------------------------------------------------------------------------------------------------
@@ -73,10 +74,22 @@
     if ([Utilities createPathIfNotExist:self.appSettings.imagePath] == FALSE)
         [self appendOutput:[NSString stringWithFormat:@"\n** Warning **\nImage path could not be created [%@]\n", self.appSettings.imagePath]];
 
-    // initialise and turn on camera so we can run a preview screen.
-    self.camera = [[CameraCapture alloc] init];
-    [self.camera startSession:_appSettings.cameraResolution];   // start camera preview session
-    [self.camera attachPreviewToView:self.previewView];
+    // Ideally I'd use an object oriented model with a common baseclass, but it looks like webcams are so completely
+    // different to communicate with compared to Olympus cams, I'm just using two entirely different objects which
+    // means the code is full of ugly if/else sections. Once I have both models running, I might revisit that to
+    // clean it up as best as I can.
+    if (self.appSettings.useOlympusCam)
+    {
+        self.olympusCam = [[OlympusCam alloc] init];
+        [self.olympusCam DetectCameras];
+    }
+    else
+    {
+        // initialise and turn on camera so we can run a preview screen.
+        self.camera = [[CameraCapture alloc] init];
+        [self.camera startSession:_appSettings.cameraResolution];   // start camera preview session
+        [self.camera attachPreviewToView:self.previewView];
+    }
     
     NSLog(@"Button pointer: %@", _btnOpenPort);
     _btnOpenPort.enabled = false;   // will be enabled when we receive a disconnect notification
@@ -88,7 +101,14 @@
 {
     [super viewDidLayout];
 
-    self.camera.previewLayer.frame = self.previewView.bounds;
+    if (self.appSettings.useOlympusCam)
+    {
+        
+    }
+    else
+    {
+        self.camera.previewLayer.frame = self.previewView.bounds;
+    }
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -98,7 +118,14 @@
     // close the threads that may still be running.
     self.scanThreadRunning = YES;
     
-    [self.camera stopSession];
+    if (self.appSettings.useOlympusCam)
+    {
+        [self.olympusCam CameraExit];
+    }
+    else
+    {
+        [self.camera stopSession];
+    }
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -211,7 +238,16 @@
     [self appendOutput:[NSString stringWithFormat:@"\n\tUSB Port\t\t\t\t: %s", [_appSettings.usbPortName UTF8String]]];
     [self appendOutput:[NSString stringWithFormat:@"\n\tLog File\t\t\t\t: %s", [_appSettings.logFileName UTF8String]]];
     [self appendOutput:[NSString stringWithFormat:@"\n\tCaptured Image Location\t: %s", [_appSettings.imagePath UTF8String]]];
-    [self appendOutput:[NSString stringWithFormat:@"\n\tCamera Resolution\t\t: %d x %d\n\n", (int)_appSettings.cameraResolution.width, (int)_appSettings.cameraResolution.height]];
+    if (_appSettings.useOlympusCam == TRUE)
+    {
+        [self appendOutput:@"\n\tCamera used\t\t\t: Olympus"];
+    }
+    else
+    {
+        [self appendOutput:@"\n\tCamera used\t\t\t: Webcam"];
+    }
+    
+    [self appendOutput:[NSString stringWithFormat:@"\n\tWeb camera Resolution\t: %d x %d\n\n", (int)_appSettings.cameraResolution.width, (int)_appSettings.cameraResolution.height]];
     // TODO: maybe add an option to re-load settings file?
 
     // Also display the current scanner state flags
@@ -277,7 +313,14 @@
 
 - (IBAction)takePhotoClicked:(id)sender
 {
-    [self photoCapture];
+    if (self.appSettings.useOlympusCam)
+    {
+        [self.olympusCam CaptureImage];
+    }
+    else
+    {
+        [self photoCapture];
+    }
 }
 
 // ------------------------------------------------------------------------------------------------

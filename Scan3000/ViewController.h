@@ -10,6 +10,7 @@
 @class SerialManager;
 @class AppSettings;
 @class CameraCapture;
+@class OlympusCam;
 
 @interface ViewController : NSViewController
 
@@ -20,7 +21,9 @@
 
 @property (nonatomic, weak) SerialManager *serialManager;       // handles serial USB comms
 @property (nonatomic, weak) AppSettings *appSettings;           // contains application settings
-@property (strong) CameraCapture *camera;                       // will run the photo capture
+@property (strong) CameraCapture *camera;                       // will run the photo capture via webcam
+@property (strong) OlympusCam *olympusCam;                      // will run the photo capture via Olympus SLR
+
 
 @property (weak) IBOutlet NSButton *btnRewind;
 @property (weak) IBOutlet NSButton *btnPing;

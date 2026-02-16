@@ -32,6 +32,7 @@
         _capturePause = 2;
         _cameraResolution.width = 1920;
         _cameraResolution.height = 1080;
+        _useOlympusCam = true;                      // default to the better camera
         [self readSettingsFromFile];
     }
     return self;
@@ -100,6 +101,10 @@
                 else if ([settingName isEqualToString:@"IMAGE_LOCATION"])
                 {
                     _imagePath = settingValue;
+                }
+                else if ([settingName isEqualToString:@"USE_OLYMPUS_CAM"])
+                {
+                    _useOlympusCam = [Utilities getBoolFromString:settingValue];
                 }
                 else if ([settingName isEqualToString:@"CAM_RESOLUTION"])
                 {

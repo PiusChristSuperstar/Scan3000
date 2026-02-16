@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		575311CB2F42D5F900A63329 /* libgphoto2.6.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 575311CA2F42D5F900A63329 /* libgphoto2.6.dylib */; };
+		575311CD2F42D62500A63329 /* libgphoto2_port.12.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 575311CC2F42D62500A63329 /* libgphoto2_port.12.dylib */; };
 		5762AA4E2F10CBED009D23B2 /* settings.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 5762AA4D2F10CBED009D23B2 /* settings.xcconfig */; };
 		57CD47252F1E3DA7001A5DCC /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 57CD47242F1E3DA7001A5DCC /* AVFoundation.framework */; };
 		57FAE5B32F305A0700F59DD5 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 57FAE5B22F305A0700F59DD5 /* IOKit.framework */; };
@@ -30,6 +32,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		575311CA2F42D5F900A63329 /* libgphoto2.6.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libgphoto2.6.dylib; path = ../../../../../opt/homebrew/Cellar/libgphoto2/2.5.33_1/lib/libgphoto2.6.dylib; sourceTree = "<group>"; };
+		575311CC2F42D62500A63329 /* libgphoto2_port.12.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libgphoto2_port.12.dylib; path = ../../../../../opt/homebrew/Cellar/libgphoto2/2.5.33_1/lib/libgphoto2_port.12.dylib; sourceTree = "<group>"; };
 		5762AA152F10CAB6009D23B2 /* Scan3000.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Scan3000.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5762AA2A2F10CAB7009D23B2 /* Scan3000Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Scan3000Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		5762AA342F10CAB7009D23B2 /* Scan3000UITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Scan3000UITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -61,6 +65,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				575311CD2F42D62500A63329 /* libgphoto2_port.12.dylib in Frameworks */,
+				575311CB2F42D5F900A63329 /* libgphoto2.6.dylib in Frameworks */,
 				57CD47252F1E3DA7001A5DCC /* AVFoundation.framework in Frameworks */,
 				57FAE5B32F305A0700F59DD5 /* IOKit.framework in Frameworks */,
 			);
@@ -108,6 +114,8 @@
 		57CD47232F1E3DA6001A5DCC /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				575311CC2F42D62500A63329 /* libgphoto2_port.12.dylib */,
+				575311CA2F42D5F900A63329 /* libgphoto2.6.dylib */,
 				57FAE5B22F305A0700F59DD5 /* IOKit.framework */,
 				57CD47242F1E3DA7001A5DCC /* AVFoundation.framework */,
 			);
@@ -421,7 +429,12 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = ARHMSH5939;
 				ENABLE_HARDENED_RUNTIME = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
 				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = /opt/homebrew/include;
 				INFOPLIST_KEY_NSCameraUsageDescription = "This app needs camera access to scan projector film cells.";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSMainStoryboardFile = Main;
@@ -429,6 +442,11 @@
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					/opt/homebrew/lib,
+					/opt/homebrew/Cellar/libgphoto2/2.5.33_1/lib,
+					/opt/homebrew/Cellar/libusb/1.0.29/lib,
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MARKETING_VERSION = 1.0;
@@ -450,7 +468,12 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = ARHMSH5939;
 				ENABLE_HARDENED_RUNTIME = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
 				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = /opt/homebrew/include;
 				INFOPLIST_KEY_NSCameraUsageDescription = "This app needs camera access to scan projector film cells.";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSMainStoryboardFile = Main;
@@ -458,6 +481,11 @@
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					/opt/homebrew/lib,
+					/opt/homebrew/Cellar/libgphoto2/2.5.33_1/lib,
+					/opt/homebrew/Cellar/libusb/1.0.29/lib,
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MARKETING_VERSION = 1.0;

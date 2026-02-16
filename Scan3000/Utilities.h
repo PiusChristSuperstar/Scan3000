@@ -21,6 +21,8 @@
 
 +(NSInteger) getNumberFromString:(NSString *)input;
 
++(BOOL) getBoolFromString:(NSString *)input;
+
 +(char *) logString:(char *)str;
 
 + (ArduinoResponse) translateResponse:(char *)str;

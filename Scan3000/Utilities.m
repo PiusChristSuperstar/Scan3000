@@ -78,6 +78,15 @@
 
 // -------------------------------------------------------------------------------------------
 
+// this probably doesn't really need to be a function
++(BOOL) getBoolFromString:(NSString *)input
+{
+    BOOL boolValue = [input boolValue];
+    return boolValue;
+}
+
+// -------------------------------------------------------------------------------------------
+
 // Replace non-printable characters in str with '\'-escaped equivalents.
 // This function is used for convenient logging of data traffic.
 + (char *)logString:(char *)str
