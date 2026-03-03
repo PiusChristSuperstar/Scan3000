@@ -11,7 +11,7 @@
 
 @interface AppSettings : NSObject;
 
-@property (nonatomic, readonly) NSString *configFile;   // Configuration filename and path
+@property (nonatomic, readonly) NSURL *configFile;      // Configuration filename and path
 @property (nonatomic, readonly) NSString *lastError;    // most recent error message
 @property (nonatomic, assign) NSInteger cellsToRead;    // how many film cells to scan. This is just used for testing during development
 @property (nonatomic, strong) NSString *usbPortName;    // USB port to communicate with the Arduino

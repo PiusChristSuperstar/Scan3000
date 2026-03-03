@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		575311CB2F42D5F900A63329 /* libgphoto2.6.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 575311CA2F42D5F900A63329 /* libgphoto2.6.dylib */; };
 		575311CD2F42D62500A63329 /* libgphoto2_port.12.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 575311CC2F42D62500A63329 /* libgphoto2_port.12.dylib */; };
-		5762AA4E2F10CBED009D23B2 /* settings.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 5762AA4D2F10CBED009D23B2 /* settings.xcconfig */; };
 		57CD47252F1E3DA7001A5DCC /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 57CD47242F1E3DA7001A5DCC /* AVFoundation.framework */; };
 		57FAE5B32F305A0700F59DD5 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 57FAE5B22F305A0700F59DD5 /* IOKit.framework */; };
 /* End PBXBuildFile section */
@@ -37,7 +36,6 @@
 		5762AA152F10CAB6009D23B2 /* Scan3000.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Scan3000.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5762AA2A2F10CAB7009D23B2 /* Scan3000Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Scan3000Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		5762AA342F10CAB7009D23B2 /* Scan3000UITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Scan3000UITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		5762AA4D2F10CBED009D23B2 /* settings.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = settings.xcconfig; sourceTree = "<group>"; };
 		57CD47242F1E3DA7001A5DCC /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		57FAE5B22F305A0700F59DD5 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
@@ -92,7 +90,6 @@
 		5762AA0C2F10CAB6009D23B2 = {
 			isa = PBXGroup;
 			children = (
-				5762AA4D2F10CBED009D23B2 /* settings.xcconfig */,
 				5762AA172F10CAB6009D23B2 /* Scan3000 */,
 				5762AA2D2F10CAB7009D23B2 /* Scan3000Tests */,
 				5762AA372F10CAB7009D23B2 /* Scan3000UITests */,
@@ -241,7 +238,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				5762AA4E2F10CBED009D23B2 /* settings.xcconfig in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

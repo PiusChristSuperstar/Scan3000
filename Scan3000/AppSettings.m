@@ -9,7 +9,7 @@
 #import "AppSettings.h"
 #import "Utilities.h"
 
-#define APP_SETTINGS_FILE @"settings.xcconfig"
+#define APP_SETTINGS_FILE @"settings.json"
 
 @implementation AppSettings
 
@@ -41,101 +41,109 @@
 // -------------------------------------------------------------------------------------------
 
 
-/// Load the configuration settings. If no file is defined, or the file could not be opened, we just use default values.
+/// Load the configuration settings. If no file is defined, we just use default values and create the file.
 - (void)readSettingsFromFile
 {
+    _configFile = [[self applicationSupportDirectory] URLByAppendingPathComponent:APP_SETTINGS_FILE];
+    [self ensureConfigExists];  // create a default configuration file if none exists yet
+    NSMutableDictionary *config = [self loadConfig];
+    
+    _cellsToRead = [config[@"CELLS_TO_READ"] integerValue];
+    _capturePause = [config[@"CAPTURE_PAUSE"] integerValue];
+    _usbPortName = config[@"USB_PORT"];
+    _logFileName = config[@"LOGFILE_NAME"];
+    _imagePath = config[@"IMAGE_LOCATION"];
+    _useOlympusCam = [config[@"USE_OLYMPUS_CAM"] boolValue];
+    
+    // parse the resolution height and width
+    NSDictionary *resolution = config[@"WEBCAM_RESOLUTION"];
+    _cameraResolution.width = [resolution[@"width"] integerValue];
+    _cameraResolution.height = [resolution[@"height"] integerValue];
+}
 
-    NSError *error = nil;
-    _configFile = [NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,
-                                             NSUserDomainMask,
-                                             YES).firstObject stringByAppendingPathComponent:APP_SETTINGS_FILE];
-    
-    NSString *fileContents = [NSString stringWithContentsOfFile:_configFile encoding:NSUTF8StringEncoding error:&error];
-    
-    if (error)
+// -------------------------------------------------------------------------------------------
+
+/// Find the Application Support directory for our application. If none exists, create it.
+/// This will be something like "~/Library/Application Support/<bundle identifier>/" e.g. "~/Library/Application Support/WorldDom.Scan3000/".
+- (NSURL *)applicationSupportDirectory
+{
+    NSFileManager *fm = [NSFileManager defaultManager];
+    NSURL *baseURL = [[fm URLsForDirectory:NSApplicationSupportDirectory inDomains:NSUserDomainMask] firstObject];
+    NSString *bundleID = [[NSBundle mainBundle] bundleIdentifier];
+    NSURL *appFolder = [baseURL URLByAppendingPathComponent:bundleID isDirectory:YES];
+
+    // create the directory if it doesn't exist yet
+    if (![fm fileExistsAtPath:appFolder.path])
     {
-        _lastError = [NSString stringWithFormat:
-                      @"Error reading config file: [%@] - using default configurations instead\n", error.localizedDescription];
-        return;
+        [fm createDirectoryAtURL:appFolder
+     withIntermediateDirectories:YES
+                      attributes:nil
+                           error:nil];
     }
-
-    // split all lines into an array
-    NSArray *configLines = [fileContents componentsSeparatedByString:@"\n"];
     
-    for (int i = 0; i < configLines.count; i++)
+    return appFolder;
+}
+
+// -------------------------------------------------------------------------------------------
+
+- (void)ensureConfigExists
+{
+    NSFileManager *fm = [NSFileManager defaultManager];
+
+    if (![fm fileExistsAtPath:_configFile.path])
     {
-        if ([configLines[i] hasPrefix:@"//"])
-        {
-            // Comment line, ignore it
-        }
-        else
-        {
-            NSArray *components = [configLines[i] componentsSeparatedByString:@"="];
-            
-            // Ensure there are exactly two components
-            if (components.count == 2)
-            {
-                NSString *settingName = [components[0] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
-                NSString *valueWithQuotes = components[1];
-                
-                // Strip the single quotes and line end from the value
-                NSString *settingValue = [valueWithQuotes stringByTrimmingCharactersInSet:[NSCharacterSet characterSetWithCharactersInString:@"'\n"]];
-                
-                NSLog(@"Setting: %@, Value: %@\n", settingName, settingValue);
-                if ([settingName isEqualToString:@"CELLS_TO_READ"])
-                {
-                    _cellsToRead = [Utilities getNumberFromString:settingValue];
-                }
-                else if ([settingName isEqualToString:@"CAPTURE_PAUSE"])
-                {
-                    _capturePause = [Utilities getNumberFromString:settingValue];
-                }
-                else if ([settingName isEqualToString:@"USB_PORT"])
-                {
-                    _usbPortName = settingValue;
-                }
-                else if ([settingName isEqualToString:@"LOGFILE_NAME"])
-                {
-                    _logFileName = settingValue;
-                }
-                else if ([settingName isEqualToString:@"IMAGE_LOCATION"])
-                {
-                    _imagePath = settingValue;
-                }
-                else if ([settingName isEqualToString:@"USE_OLYMPUS_CAM"])
-                {
-                    _useOlympusCam = [Utilities getBoolFromString:settingValue];
-                }
-                else if ([settingName isEqualToString:@"CAM_RESOLUTION"])
-                {
-                    // decipher the string
-                    NSScanner *scanner = [NSScanner scannerWithString:settingValue];
+        NSDictionary *defaultConfig = @{
+            @"CELLS_TO_READ": @4,
+            @"USB_PORT": @"/dev/cu.usbserial-0001",
+            @"LOGFILE_NAME": @"~/dev/XCode/ModemCommTest/ScanBrain.log",
+            @"IMAGE_LOCATION": @"~/Pictures/Scan3000",
+            @"CAPTURE_PAUSE": @3,
+            @"WEBCAM_RESOLUTION": @{
+                    @"width": @1920,
+                    @"height": @1080
+            },
+            @"USE_OLYMPUS_CAM": @YES
+        };
 
-                    // Optional: Define which characters the scanner should ignore (defaults to whitespace/newlines)
-                    [scanner setCharactersToBeSkipped:[NSCharacterSet whitespaceCharacterSet]];
+        NSData *jsonData =
+            [NSJSONSerialization dataWithJSONObject:defaultConfig
+                                            options:NSJSONWritingPrettyPrinted
+                                              error:nil];
 
-                    // default values
-                    int width = 1920;
-                    int height = 1080;
-
-                    // 1. Scan the first number
-                    [scanner scanInt:&width];
-
-                    // 2. Skip the 'x' character
-                    [scanner scanString:@"x" intoString:NULL];
-
-                    // 3. Scan the second number
-                    [scanner scanInt:&height];
-                    _cameraResolution.width = width;
-                    _cameraResolution.height = height;
-                }
-            }
-            else
-            {
-                //NSLog(@"The input string [%@] is invalid", configLine);
-            }
-        }
+        [jsonData writeToURL:_configFile atomically:YES];
     }
+}
+
+// -------------------------------------------------------------------------------------------
+
+- (NSMutableDictionary *)loadConfig
+{
+    NSURL *configURL = [self configFile];
+    NSData *data = [NSData dataWithContentsOfURL:configURL];
+    if (!data)
+        return nil;
+
+    NSDictionary *json =
+        [NSJSONSerialization JSONObjectWithData:data
+                                        options:0
+                                          error:nil];
+
+    return [json mutableCopy];
+}
+
+// -------------------------------------------------------------------------------------------
+
+- (void)saveConfig:(NSDictionary *)config
+{
+
+    NSURL *configURL = [self configFile];
+
+    NSData *jsonData =
+        [NSJSONSerialization dataWithJSONObject:config
+                                        options:NSJSONWritingPrettyPrinted
+                                          error:nil];
+
+    [jsonData writeToURL:configURL atomically:YES];
 }
 
 // -------------------------------------------------------------------------------------------

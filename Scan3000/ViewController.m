@@ -232,7 +232,12 @@
     [self appendOutput:@"\n=== Settings ===\n"];
     [self appendOutput:@"\nNote that for the time being, settings can only be changed through the config file.\n"];
     
-    [self appendOutput:[NSString stringWithFormat:@"\n\tConfiguration File\t\t: %s", [_appSettings.configFile UTF8String]]];
+    if (_appSettings.lastError.length > 0)
+    {
+        [self appendOutput:[NSString stringWithFormat:@"\n---- Configuration Error ----\n%s\n------------", [_appSettings.lastError UTF8String]]];
+    }
+    
+    [self appendOutput:[NSString stringWithFormat:@"\n\tConfiguration File\t\t: %s", [_appSettings.configFile.absoluteString UTF8String]]];
     [self appendOutput:[NSString stringWithFormat:@"\n\tCells To Read\t\t\t: %li", _appSettings.cellsToRead]];
     [self appendOutput:[NSString stringWithFormat:@"\n\tCapture Pause\t\t\t: %li", _appSettings.capturePause]];
     [self appendOutput:[NSString stringWithFormat:@"\n\tUSB Port\t\t\t\t: %s", [_appSettings.usbPortName UTF8String]]];
