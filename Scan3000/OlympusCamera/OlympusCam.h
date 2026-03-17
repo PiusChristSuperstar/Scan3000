@@ -12,7 +12,7 @@
 @property (nonatomic) Camera *camera;
 @property (nonatomic) GPContext *context;
 
-- (void)CaptureImage;
+- (void)CaptureImage:(NSString *)saveImagePath;
 - (void)DetectCameras;
 - (void)CameraExit;
 

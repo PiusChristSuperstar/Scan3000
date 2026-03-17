@@ -320,7 +320,7 @@
 {
     if (self.appSettings.useOlympusCam)
     {
-        [self.olympusCam CaptureImage];
+        [self.olympusCam CaptureImage:self.appSettings.imagePath];
     }
     else
     {
