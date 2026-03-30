@@ -15,5 +15,6 @@
 - (void)CaptureImage:(NSString *)saveImagePath;
 - (void)DetectCameras;
 - (void)CameraExit;
+- (void)DeleteCameraImage:(CameraFilePath)camera_file_path;
 
 @end

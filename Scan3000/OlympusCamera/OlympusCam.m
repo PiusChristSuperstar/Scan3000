@@ -59,7 +59,15 @@ static NSDateFormatter *formatter = nil;
 
     gp_camera_set_abilities(_camera, ability);
 
-    int ret = gp_camera_init(_camera, _context);
+    int result = gp_camera_init(_camera, _context);
+    if (result != GP_OK)
+    {
+        NSLog(@"Error initialising camera : %d", result);
+    }
+    else
+    {
+        NSLog(@"Camera initialised successfully");
+    }
 }
 
 // -------------------------------------------------------------------------------------------
@@ -124,8 +132,12 @@ static NSDateFormatter *formatter = nil;
             if (!success)
                 NSLog(@"Write for file [%@] failed: %@", fullFilePath, error.localizedDescription);
             else
+            {
                 NSLog(@"File [%@] saved", fullFilePath);
-
+                
+                [self DeleteCameraImage:camera_file_path];
+                //TestSomeShit;
+            }
             
             /* - old method. Seems less robust than the gp_file_get_data_and_size/writeToFile version above. -
             NSString *fullFilePath2 = [expandedPath stringByAppendingPathComponent:@"image2.jpg"];
@@ -143,6 +155,39 @@ static NSDateFormatter *formatter = nil;
 
         // 4. Clean up
         gp_file_unref(cameraFile);
+    }
+}
+
+// -------------------------------------------------------------------------------------------
+
+- (void)DeleteCameraImage:(CameraFilePath)camera_file_path
+{
+    int result = gp_filesystem_delete_file(_camera->fs, camera_file_path.folder, camera_file_path.name, _context);
+
+    if (result != GP_OK)
+    {
+        NSLog(@"Error deleting camera file [%s] : %d", camera_file_path.name, result);
+    }
+    else
+    {
+        NSLog(@"File [%s] deleted successfully from camera", camera_file_path.name);
+
+        // Assuming the camera is set to also capture RAW files, delete that one too.
+        NSString *camFileName = [NSString stringWithUTF8String:camera_file_path.name];
+        NSString *rawFileName = [camFileName stringByReplacingOccurrencesOfString:@".JPG"
+                                                                       withString:@".ORF"
+                                                                          options:NSCaseInsensitiveSearch
+                                                                            range:NSMakeRange(0, [camFileName length])];
+        
+        result = gp_filesystem_delete_file(_camera->fs, camera_file_path.folder, [rawFileName UTF8String], _context);
+        if (result != GP_OK)
+        {
+            NSLog(@"Error deleting raw file [%@] : %d", rawFileName, result);
+        }
+        else
+        {
+            NSLog(@"File [%@] deleted successfully from camera", rawFileName);
+        }
     }
 }
 
