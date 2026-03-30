@@ -16,5 +16,7 @@
 - (void)DetectCameras;
 - (void)CameraExit;
 - (void)DeleteCameraImage:(CameraFilePath)camera_file_path;
-
+- (void)EnableLiveView;     // make sure camera allows live preview
+//- (void)RunLivePreview;
+- (NSImage *)GetPreviewImage:(CameraFile *)camFile;   // retrieve a preview image from the camera
 @end

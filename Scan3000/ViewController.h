@@ -18,6 +18,7 @@
 @property (weak) IBOutlet NSView *previewView;
 @property (weak) IBOutlet NSImageView *commsLED;
 @property (weak) IBOutlet NSImageView *cmdLED;
+@property (strong) NSImageView *olympusView;        // receives the Olympus cam preview image for live stream
 
 @property (nonatomic, weak) SerialManager *serialManager;       // handles serial USB comms
 @property (nonatomic, weak) AppSettings *appSettings;           // contains application settings

@@ -6,12 +6,14 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <Cocoa/Cocoa.h>
 #import "OlympusCam.h"
 
 @implementation OlympusCam
 
 // formatter used for the file name. We're making this static because creating it over and over uses a lot of resources
 static NSDateFormatter *formatter = nil;
+
 
 // -------------------------------------------------------------------------------------------
 
@@ -67,6 +69,7 @@ static NSDateFormatter *formatter = nil;
     else
     {
         NSLog(@"Camera initialised successfully");
+        [self EnableLiveView];      // turn on camera live view option if needed
     }
 }
 
@@ -189,6 +192,65 @@ static NSDateFormatter *formatter = nil;
             NSLog(@"File [%@] deleted successfully from camera", rawFileName);
         }
     }
+}
+
+// -------------------------------------------------------------------------------------------
+
+- (void)EnableLiveView
+{
+    CameraWidget *widget = NULL;
+    gp_camera_get_config(_camera, &widget, _context);
+    
+    CameraWidget *liveview = NULL;
+    gp_widget_get_child_by_name(widget, "liveview", &liveview);
+    
+    if (liveview)
+    {
+        NSLog(@"Turning on liveview option");
+
+        int value = 1;
+        gp_widget_set_value(liveview, &value);
+        gp_camera_set_config(_camera, widget, _context);
+        //NSLog(@"Error initialising camera : %d", result);
+    }
+    
+    gp_widget_free(widget);
+}
+
+// -------------------------------------------------------------------------------------------
+
+// retrieve a preview image from the camera
+- (NSImage *)GetPreviewImage:(CameraFile *)camFile
+{
+    NSImage *img;
+    
+    int ret = gp_camera_capture_preview(_camera, camFile, _context);
+
+    if (ret == GP_OK)
+    {
+        const char *data;
+        unsigned long size;
+
+        gp_file_get_data_and_size(camFile, &data, &size);
+
+        NSData *imageData = [NSData dataWithBytes:data length:size];
+
+        img = [[NSImage alloc] initWithData:imageData];
+    }
+    else if (ret == GP_ERROR_CAMERA_BUSY)    // should be GP_ERROR_IO_IN_PROGRESS but I can't find a header file that has this defined
+    {
+        // This happens if the previous call hasn't finished and is to be expected to happen
+        // a bunch of times while we're doing fast previews.
+        // Just pause for a short while to give the loop time to breathe
+        usleep(20000);
+    }
+    else
+    {
+        NSLog(@"Preview failed: %s", gp_result_as_string(ret));
+        img = NULL;
+    }
+  
+    return img;
 }
 
 // -------------------------------------------------------------------------------------------

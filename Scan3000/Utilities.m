@@ -39,11 +39,13 @@
     NSError *error = nil;
     NSFileManager *fileManager = [NSFileManager defaultManager];
 
+    NSString *absolutePath = [fullPath stringByExpandingTildeInPath];
+    
     // This single call handles both the "check" and the "creation"
-    BOOL success = [fileManager createDirectoryAtPath:fullPath
-                           withIntermediateDirectories:YES
-                                            attributes:nil
-                                                 error:&error];
+    BOOL success = [fileManager createDirectoryAtPath:absolutePath
+                          withIntermediateDirectories:YES
+                                           attributes:nil
+                                                error:&error];
 
     if (!success)
     {

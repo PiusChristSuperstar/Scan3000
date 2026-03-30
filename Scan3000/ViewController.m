@@ -19,6 +19,8 @@
 
 // TODO: we may need to make this atomic to keep it threadsafe
 @property (nonatomic) BOOL scanThreadRunning;   // true if we're currently scanning
+@property (nonatomic) BOOL previewRunning;      // true if running Olympus Camera preview loop
+@property (atomic, assign) BOOL previewClosed;  // true if the Olympus preview loop has finished
 
 @end
 
@@ -34,6 +36,9 @@
     [super viewDidLoad];
 
     _scanThreadRunning = false;
+    _previewRunning = false;
+    _previewClosed = true;
+    
     self.previewView.wantsLayer = YES;      // allow camera preview
     
     AppDelegate *appDelegate = (AppDelegate *)NSApp.delegate;
@@ -80,6 +85,17 @@
     // clean it up as best as I can.
     if (self.appSettings.useOlympusCam)
     {
+        // create the NSImageView that will receive the Olympus preview images and make it a subview of the previewView
+        self.olympusView = [[NSImageView alloc] initWithFrame:NSMakeRect(0, 0, self.previewView.frame.size.width, self.previewView.frame.size.height)];
+        self.olympusView = [[NSImageView alloc] initWithFrame:self.previewView.bounds];
+        self.olympusView.imageScaling = NSImageScaleProportionallyUpOrDown;
+        self.olympusView.imageAlignment = NSImageAlignCenter;
+
+        // Optional but recommended
+        self.olympusView.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
+
+        [self.previewView addSubview:self.olympusView];
+        
         self.olympusCam = [[OlympusCam alloc] init];
         [self.olympusCam DetectCameras];
     }
@@ -103,7 +119,16 @@
 
     if (self.appSettings.useOlympusCam)
     {
+        _previewRunning = true;
         
+        // start the Olympus preview loop in a background thread
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+            self.previewClosed = NO;
+
+            [self startPreviewLoop];
+            
+            self.previewClosed = YES;       // signal that preview has ended now
+        });
     }
     else
     {
@@ -120,6 +145,7 @@
     
     if (self.appSettings.useOlympusCam)
     {
+        _previewRunning = false;    // stop Olympus Camera preview, if running
         [self.olympusCam CameraExit];
     }
     else
@@ -227,6 +253,51 @@
 
 // ------------------------------------------------------------------------------------------------
 
+- (void)startPreviewLoop
+{
+    // we're creating the file here rather than creating and freeing it thousands of times in the loop. Otherwise
+    // we are just piling on resources being used.
+    CameraFile *file;
+    gp_file_new(&file);
+    
+    static int failCount = 0;
+    while (_previewRunning)
+    {
+        @autoreleasepool
+        {
+            NSImage *image = [self.olympusCam GetPreviewImage:file];
+            if (image != nil)
+            {
+                failCount = 0;
+                
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    self.olympusView.image = image;
+                });
+                
+                usleep(100000); // ~10 fps
+                //usleep(1000000); // ~1 fps
+            }
+            else
+            {
+                usleep(100000);
+                failCount++;
+            }
+            
+            if (failCount > 100)
+            {
+                // turn off preview again if we keep failing.
+                _previewRunning = false;
+                failCount = 0;
+                NSLog(@"Stopped image preview automatically due to failed captures");
+                //[self appendOutput:[NSString stringWithFormat:@"\nStopped image preview automatically due to failed captures"]];
+            }
+        }
+    }
+    gp_file_free(file);
+}
+
+// ------------------------------------------------------------------------------------------------
+
 - (IBAction)showSettingsClicked:(id)sender
 {
     [self appendOutput:@"\n=== Settings ===\n"];
@@ -320,7 +391,23 @@
 {
     if (self.appSettings.useOlympusCam)
     {
+        _previewRunning = false;    // running the live stream interferes with photo capture so we halt it here
+        
+        while (_previewClosed == false)     // wait until the preview stream has ended
+        {
+            // TODO : There has to be a better way to do this!
+            usleep(100000);
+        }
+        
         [self.olympusCam CaptureImage:self.appSettings.imagePath];
+
+        // re-start the Olympus preview loop
+        _previewRunning = true;
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+            self.previewClosed = NO;
+            [self startPreviewLoop];
+            self.previewClosed = YES;       // signal that preview has ended now
+        });
     }
     else
     {
