@@ -831,11 +831,11 @@
                                 </connections>
                             </button>
                             <customView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="0ZC-zG-IEI">
-                                <rect key="frame" x="692" y="94" width="512" height="338"/>
+                                <rect key="frame" x="692" y="64" width="512" height="368"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                                 <subviews>
                                     <customView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="AQq-1h-G4c">
-                                        <rect key="frame" x="0.0" y="0.0" width="512" height="338"/>
+                                        <rect key="frame" x="0.0" y="0.0" width="512" height="368"/>
                                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                                     </customView>
                                 </subviews>
@@ -892,9 +892,17 @@
                                     <action selector="openPortClicked:" target="XfG-lQ-9wD" id="K9G-27-wvU"/>
                                 </connections>
                             </button>
+                            <switch horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" baseWritingDirection="leftToRight" alignment="left" translatesAutoresizingMaskIntoConstraints="NO" id="jex-r9-VZ1">
+                                <rect key="frame" x="690" y="438" width="42" height="25"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                                <connections>
+                                    <action selector="liveViewSwitchChanged:" target="XfG-lQ-9wD" id="Afl-eL-Jol"/>
+                                </connections>
+                            </switch>
                         </subviews>
                     </view>
                     <connections>
+                        <outlet property="LiveViewSwitch" destination="jex-r9-VZ1" id="1QF-Se-pHt"/>
                         <outlet property="btnCheckSensor" destination="YNu-qz-2PM" id="7FT-Xj-fem"/>
                         <outlet property="btnNextCell" destination="nKM-kP-Ter" id="fts-n2-hGi"/>
                         <outlet property="btnOpenPort" destination="zOB-2x-hHu" id="NpA-Tc-jKq"/>

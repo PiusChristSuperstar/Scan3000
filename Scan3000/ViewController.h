@@ -25,7 +25,7 @@
 @property (strong) CameraCapture *camera;                       // will run the photo capture via webcam
 @property (strong) OlympusCam *olympusCam;                      // will run the photo capture via Olympus SLR
 
-
+@property (weak) IBOutlet NSSwitch *liveViewSwitch;
 @property (weak) IBOutlet NSButton *btnRewind;
 @property (weak) IBOutlet NSButton *btnPing;
 @property (weak) IBOutlet NSButton *btnCheckSensor;

@@ -41,6 +41,13 @@
     
     self.previewView.wantsLayer = YES;      // allow camera preview
     
+    // Create a border to make it a bit easier to see where the preview should be, in case the camera
+    // is not responding.
+    self.previewView.layer.borderColor = [NSColor blackColor].CGColor; // Border color
+    self.previewView.layer.borderWidth = 2.0; // Border width in pixels
+    self.previewView.layer.cornerRadius = 5.0; // Optional: Rounded corners
+    self.previewView.layer.masksToBounds = YES; // Required for corner radius
+
     AppDelegate *appDelegate = (AppDelegate *)NSApp.delegate;
     self.serialManager = appDelegate.serialManager;
     self.appSettings = appDelegate.appSettings;
@@ -117,6 +124,18 @@
 {
     [super viewDidLayout];
 
+    if (!self.appSettings.useOlympusCam)
+    {
+        self.camera.previewLayer.frame = self.previewView.bounds;
+    }
+}
+
+// ------------------------------------------------------------------------------------------------
+
+- (void)viewDidAppear
+{
+    [super viewDidAppear];
+
     if (self.appSettings.useOlympusCam)
     {
         _previewRunning = true;
@@ -124,15 +143,16 @@
         // start the Olympus preview loop in a background thread
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
             self.previewClosed = NO;
-
+            
             [self startPreviewLoop];
             
             self.previewClosed = YES;       // signal that preview has ended now
         });
-    }
-    else
-    {
-        self.camera.previewLayer.frame = self.previewView.bounds;
+        
+        // Setting this programatically doesn't trigger the liveViewSwitchChanged event, so this
+        // won't create another liveView thread. But we still need to make sure the switch is on
+        // so it matches the camera state.
+        [_liveViewSwitch setState:NSControlStateValueOn];
     }
 }
 
@@ -290,6 +310,11 @@
                 failCount = 0;
                 NSLog(@"Stopped image preview automatically due to failed captures");
                 //[self appendOutput:[NSString stringWithFormat:@"\nStopped image preview automatically due to failed captures"]];
+
+                // turn off liveView switch as well
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [self.liveViewSwitch setState:NSControlStateValueOff];
+                });
             }
         }
     }
@@ -420,6 +445,26 @@
 - (IBAction)openPortClicked:(id)sender
 {
     [_serialManager start];
+}
+
+// ------------------------------------------------------------------------------------------------
+
+- (IBAction)liveViewSwitchChanged:(NSSwitch *)sender
+{
+    if (sender.state == NSControlStateValueOn)
+    {
+        // start or re-start the live view thread
+        _previewRunning = true;
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+            self.previewClosed = NO;
+            [self startPreviewLoop];
+            self.previewClosed = YES;       // signal that preview has ended now
+        });
+    }
+    else
+    {
+        _previewRunning = false;    // will cause the thread to end
+    }
 }
 
 // ------------------------------------------------------------------------------------------------
