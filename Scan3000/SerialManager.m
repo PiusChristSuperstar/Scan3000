@@ -7,6 +7,7 @@
 //  Created by Pius Ott on 14/1/2026.
 //
 
+#import <poll.h>
 #import <termios.h>
 #import <Foundation/Foundation.h>
 #import <IOKit/IOKitLib.h>
@@ -204,7 +205,11 @@ static void DeviceDisconnectedCallback(void *refCon, io_iterator_t iterator)
     if ([self isPortOpen] == NO)
         return @"USB port is no longer open\n";
 
-    ssize_t numBytes = write(self.usb, [cmd UTF8String], cmd.length);
+    // the Arduino expects a new line as a command terminator
+    NSString *line = [cmd hasSuffix:@"\n"] ? cmd : [cmd stringByAppendingString:@"\n"];
+    const char *bytes = [line UTF8String];
+    ssize_t numBytes = write(self.usb, bytes, strlen(bytes));
+
     if (numBytes == -1)
     {
         return [NSString stringWithFormat:@"USB write error: %s\n", strerror(errno)];
@@ -222,18 +227,18 @@ static void DeviceDisconnectedCallback(void *refCon, io_iterator_t iterator)
         perror("Unable to open serial port");
         return -1;
     }
-    
+
     struct termios options;
     tcgetattr(fd, &options);
     cfsetispeed(&options, B9600);
     cfsetospeed(&options, B9600);
-    options.c_cflag |= (CLOCAL | CREAD);
-    options.c_cflag &= ~CSIZE;
-    options.c_cflag |= CS8;
-    options.c_cflag &= ~PARENB;
-    options.c_cflag &= ~CSTOPB;
-    
+    options.c_cflag |= (CLOCAL | CREAD | CS8);
+    options.c_cflag &= ~(PARENB | CSTOPB | CRTSCTS);
+    options.c_cc[VMIN]  = 0;
+    options.c_cc[VTIME] = 0;
     tcsetattr(fd, TCSANOW, &options);
+    tcflush(fd, TCIOFLUSH);
+
     return fd;
 }
 
@@ -275,55 +280,71 @@ static void DeviceDisconnectedCallback(void *refCon, io_iterator_t iterator)
         
         while (self.usbReadThreadRunning)
         {
-            ssize_t bytesRead = read(self.usb, readBuf, sizeof(readBuf));
-            if (bytesRead > 0)
+            struct pollfd pfd = { .fd = self.usb, .events = POLLIN, .revents = 0 };
+
+            int pr = poll(&pfd, 1, 200);          // sleep up to 200 ms waiting for data
+            if (pr < 0)
             {
-                @synchronized(self.rawBuffer)
+                if (errno == EINTR) continue;     // interrupted by a signal, just retry
+                break;                            // real error
+            }
+            
+            if (pr == 0) continue;                // timeout: loop round and re-check the running flag
+
+            if (pfd.revents & (POLLERR | POLLHUP | POLLNVAL))
+            {
+                [self handleDisconnect];          // port went away
+                break;
+            }
+
+            if (pfd.revents & POLLIN)
+            {
+                ssize_t bytesRead = read(self.usb, readBuf, sizeof(readBuf));
+                if (bytesRead > 0)
                 {
-                    [self.rawBuffer appendBytes:readBuf length:bytesRead];
-                    
-                    while (1)
+                    @synchronized(self.rawBuffer)
                     {
-                        const char *bytes = self.rawBuffer.bytes;
-                        NSUInteger len = self.rawBuffer.length;
+                        [self.rawBuffer appendBytes:readBuf length:bytesRead];
                         
-                        char *newline = memchr(bytes, '\n', len);
-                        if (!newline) break;
-                        
-                        NSUInteger lineLen = newline - bytes;
-                        
-                        NSData *lineData = [NSData dataWithBytes:bytes length:lineLen];
-                        NSString *line = [[NSString alloc] initWithData:lineData                                                       encoding:NSUTF8StringEncoding];
-                        
-                        if (line)
+                        while (1)
                         {
-                            @synchronized(self.receiveBuffer)
+                            const char *bytes = self.rawBuffer.bytes;
+                            NSUInteger len = self.rawBuffer.length;
+                            
+                            char *newline = memchr(bytes, '\n', len);
+                            if (!newline) break;
+                            
+                            NSUInteger lineLen = newline - bytes;
+                            
+                            NSData *lineData = [NSData dataWithBytes:bytes length:lineLen];
+                            NSString *line = [[NSString alloc] initWithData:lineData                                                       encoding:NSUTF8StringEncoding];
+                            
+                            if (line)
                             {
-                                [self.receiveBuffer enqueue:line];
+                                @synchronized(self.receiveBuffer)
+                                {
+                                    [self.receiveBuffer enqueue:line];
+                                    
+                                    // let the receive handler know that we've received something it may want to process
+                                    dispatch_semaphore_signal(self.receiveSemaphore);
+                                }
                                 
-                                // let the receive handler know that we've received something it may want to process
-                                dispatch_semaphore_signal(self.receiveSemaphore);
+                                // let the ViewController know that we have data to display.
+                                dispatch_async(dispatch_get_main_queue(), ^{
+                                    [[NSNotificationCenter defaultCenter]
+                                     postNotificationName:SerialDidReceiveLineNotification
+                                     object:self
+                                     userInfo:@{ SerialLineKey : line }];
+                                });
                             }
                             
-                            // let the ViewController know that we have data to display.
-                            dispatch_async(dispatch_get_main_queue(), ^{
-                                [[NSNotificationCenter defaultCenter]
-                                 postNotificationName:SerialDidReceiveLineNotification
-                                 object:self
-                                 userInfo:@{ SerialLineKey : line }];
-                            });
+                            [self.rawBuffer replaceBytesInRange:NSMakeRange(0, lineLen + 1)
+                                                      withBytes:NULL
+                                                         length:0];
                         }
-                        
-                        [self.rawBuffer replaceBytesInRange:NSMakeRange(0, lineLen + 1)
-                                                  withBytes:NULL
-                                                     length:0];
                     }
                 }
             }
-            
-            // have we received a shut down signal?
-            if (!self.usbReadThreadRunning)
-                break;
         }
     });
 }
